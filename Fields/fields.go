@@ -1,7 +1,7 @@
 package fields
 
-type field interface {
-	multiply(int64, int64) int64
-	add(int64, int64) int64
-	getRandom() int64
+type Field interface {
+	Multiply(int64, int64) int64
+	Add(int64, int64) int64
+	GetRandom() int64
 }
