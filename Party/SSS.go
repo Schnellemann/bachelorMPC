@@ -1,6 +1,6 @@
 package party
 
-import "fields"
+import fields "MPC/Fields"
 
 type ShamirSecretSharing struct {
 	field fields.Field

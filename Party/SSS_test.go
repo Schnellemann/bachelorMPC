@@ -1,7 +1,7 @@
 package party
 
 import (
-	"fields"
+	fields "MPC/Fields"
 	"fmt"
 	"testing"
 )
