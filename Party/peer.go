@@ -1,9 +1,11 @@
 package party
 
 import (
+	aux "MPC/Auxiliary"
 	"encoding/gob"
 	"fmt"
 	"net"
+	"os"
 	"sync"
 )
 
@@ -32,26 +34,6 @@ func mkPeer() *Peer {
 	p.cConnections = make(chan net.Conn)
 
 	return p
-}
-
-func startPeer(ip string, connectToPort string, listenOnPort string) {
-	go p.receiveFromChannels()
-	//Test on localhost
-	conn, err := net.Dial("tcp", ip+":"+connectToPort)
-	if err != nil {
-		fmt.Println("Could not connect peer")
-	} else if conn != nil {
-		//defer conn.Close()
-		//Make the decoder such that we can decode the messages
-		dec := gob.NewDecoder(conn)
-		enc := gob.NewEncoder(conn)
-		p.connections = append(p.connections, enc)
-		p.receivePeers(dec)
-		p.connectToPeers(ip + ":" + connectToPort)
-		go p.handleConnection(dec)
-
-	}
-	go p.listenForConnections(ip, listenOnPort)
 }
 
 func (p *Peer) handleConnection(dec *gob.Decoder) {
@@ -139,7 +121,56 @@ func (p *Peer) connectToPeers(initialConn string) {
 	}
 }
 
-func (p *Peer) startPeer(ip string, connectToPort string, listenOnPort string) {
+func (p *Peer) receivePeers(dec *gob.Decoder) {
+	recievedPeersPackage := NetPackage{}
+	err := dec.Decode(&recievedPeersPackage)
+	if err != nil {
+		fmt.Println("Could not decode peer list package from peer")
+		return
+	}
+	p.peerlist.lock.Lock()
+	defer p.peerlist.lock.Unlock()
+	p.peerlist.ipPorts = recievedPeersPackage.IpPorts
+}
+
+func (p *Peer) listenForConnections(totalPeers int, ip string, listenPort string) {
+	var ipport = ip + ":" + listenPort
+	li, err := net.Listen("tcp", ipport)
+	if err != nil {
+		fmt.Println("Error in listening")
+		return
+	}
+	defer li.Close()
+	name, _ := os.Hostname()
+	_, port, _ := net.SplitHostPort(li.Addr().String())
+	addrs, _ := net.LookupHost(name)
+	fmt.Println("Other peers can connect to me on the following ip:port")
+	for _, addr := range addrs {
+		if aux.IsIpv4Regex(addr) {
+			fmt.Println("Address " + ": " + addr + ":" + port)
+			p.broadcastPeer(addr + ":" + port)
+		}
+	}
+	i := 0
+	for i < totalPeers {
+		conn, err := li.Accept()
+		if err != nil {
+			fmt.Println("Failed connection on accept")
+			return
+		}
+		defer conn.Close()
+		p.cConnections <- conn
+		i++
+	}
+}
+
+func (p *Peer) broadcastPeer(ipPort string) {
+	newPeerPackage := new(NetPackage)
+	newPeerPackage.Peer = ipPort
+	p.cPackages <- newPeerPackage
+}
+
+func (p *Peer) startPeer(totalPeers int, ip string, connectToPort string, listenOnPort string) {
 	go p.receiveFromChannels()
 	//Test on localhost
 	conn, err := net.Dial("tcp", ip+":"+connectToPort)
@@ -154,8 +185,6 @@ func (p *Peer) startPeer(ip string, connectToPort string, listenOnPort string) {
 		p.receivePeers(dec)
 		p.connectToPeers(ip + ":" + connectToPort)
 		go p.handleConnection(dec)
-
 	}
-	go p.listenForConnections(ip, listenOnPort)
-
+	go p.listenForConnections(totalPeers, ip, listenOnPort)
 }
