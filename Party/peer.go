@@ -11,6 +11,7 @@ import (
 
 type Peer struct {
 	Number       int
+	ipListen     string
 	cConnections chan net.Conn
 	cPackages    chan *NetPackage
 	connections  []*gob.Encoder
@@ -18,8 +19,13 @@ type Peer struct {
 }
 
 type peerList struct {
-	ipPorts []string
+	ipPorts []PeerTuple
 	lock    sync.Mutex
+}
+
+type PeerTuple struct {
+	IpPort string
+	Number int
 }
 
 func mkPeerList() *peerList {
@@ -27,8 +33,9 @@ func mkPeerList() *peerList {
 	return pl
 }
 
-func mkPeer() *Peer {
+func mkPeer(number int) *Peer {
 	p := new(Peer)
+	p.Number = number
 	p.peerlist = mkPeerList()
 	p.cPackages = make(chan *NetPackage)
 	p.cConnections = make(chan net.Conn)
@@ -64,7 +71,7 @@ func (p *Peer) receiveFromChannels() {
 			decoder := gob.NewDecoder(newConnection)
 			p.connections = append(p.connections, encoder)
 			//send peers to the new connections
-			p.sendPeers(encoder)
+			p.sendPeerlist(encoder)
 			go p.handleConnection(decoder)
 
 		case newPackage := <-p.cPackages:
@@ -73,7 +80,7 @@ func (p *Peer) receiveFromChannels() {
 	}
 }
 
-func (p *Peer) sendPeers(encoder *gob.Encoder) {
+func (p *Peer) sendPeerlist(encoder *gob.Encoder) {
 	peerPackage := new(NetPackage)
 	peerPackage.IpPorts = p.peerlist.ipPorts
 	p.write(encoder, peerPackage)
@@ -89,7 +96,7 @@ func (p *Peer) write(encoder *gob.Encoder, pack *NetPackage) {
 }
 
 func (p *Peer) processPackage(pack *NetPackage) {
-	if pack.Peer != "" {
+	if pack.Peer.IpPort != "" {
 		//New peer wants to connect to us
 		p.peerlist.lock.Lock()
 		defer p.peerlist.lock.Unlock()
@@ -107,12 +114,12 @@ func (p *Peer) processMessage(message Message) {
 }
 
 func (p *Peer) connectToPeers(initialConn string) {
-	for _, ip := range p.peerlist.ipPorts {
+	for _, peer := range p.peerlist.ipPorts {
 		//Make sure you don't connect to the initial peer again
-		if ip != initialConn {
-			conn, err := net.Dial("tcp", ip)
+		if peer.IpPort != initialConn && peer.IpPort != p.ipListen {
+			conn, err := net.Dial("tcp", peer.IpPort)
 			if err != nil {
-				fmt.Println("Failed to connect to " + ip)
+				fmt.Println("Failed to connect to " + peer.IpPort)
 				fmt.Println(err)
 			} else {
 				p.cConnections <- conn
@@ -130,7 +137,7 @@ func (p *Peer) receivePeers(dec *gob.Decoder) {
 	}
 	p.peerlist.lock.Lock()
 	defer p.peerlist.lock.Unlock()
-	p.peerlist.ipPorts = recievedPeersPackage.IpPorts
+	p.peerlist.ipPorts = append(p.peerlist.ipPorts, recievedPeersPackage.IpPorts...)
 }
 
 func (p *Peer) listenForConnections(totalPeers int, ip string, listenPort string) {
@@ -151,14 +158,13 @@ func (p *Peer) listenForConnections(totalPeers int, ip string, listenPort string
 			p.broadcastPeer(addr + ":" + port)
 		}
 	}
-	i := 0
+	i := 1
 	for i < totalPeers {
 		conn, err := li.Accept()
 		if err != nil {
 			fmt.Println("Failed connection on accept")
 			return
 		}
-		defer conn.Close()
 		p.cConnections <- conn
 		i++
 	}
@@ -166,11 +172,18 @@ func (p *Peer) listenForConnections(totalPeers int, ip string, listenPort string
 
 func (p *Peer) broadcastPeer(ipPort string) {
 	newPeerPackage := new(NetPackage)
-	newPeerPackage.Peer = ipPort
-	p.cPackages <- newPeerPackage
+	newPeerPackage.Peer = PeerTuple{IpPort: ipPort, Number: p.Number}
+	for _, c := range p.connections {
+		p.write(c, newPeerPackage)
+	}
 }
 
 func (p *Peer) startPeer(totalPeers int, ip string, connectToPort string, listenOnPort string) {
+	p.ipListen = ip + ":" + listenOnPort
+	p.peerlist.lock.Lock()
+	p.peerlist.ipPorts = append(p.peerlist.ipPorts, PeerTuple{ip + ":" + listenOnPort, p.Number})
+	fmt.Printf("adding own port: %v\n", ip+":"+listenOnPort)
+	p.peerlist.lock.Unlock()
 	go p.receiveFromChannels()
 	//Test on localhost
 	conn, err := net.Dial("tcp", ip+":"+connectToPort)
