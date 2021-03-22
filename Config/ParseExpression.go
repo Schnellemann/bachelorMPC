@@ -26,12 +26,12 @@ func isValid(holdings []holding) error {
 //Returns result identifier and a list of holdings which are the operations that needs to be computed in the given order
 //returns convertErr if conversion failed
 func convertAstToExpressionList(exp ast.Expr) (string, []holding, error) {
-	resNum, holdings, name, err := convertAstAux(1, exp)
+	resNum, holdings, err := convertAstAux(1, exp)
 	isValidErr := isValid(holdings)
 	if isValidErr != nil {
-		return 0, nil, isValidErr
+		return "", nil, isValidErr
 	}
-	return name, holdings, err
+	return "r" + strconv.Itoa(resNum), holdings, err
 }
 
 func convertAstAux(unique int, exp ast.Expr) (int, []holding, error) {
@@ -57,9 +57,9 @@ func convertBinaryExpr(unique int, exp *ast.BinaryExpr) (int, []holding, error) 
 	var binaryIns holding
 	switch op {
 	case token.ADD:
-		binaryIns = createAddition(getExprName(exp.X, left), getExprName(exp.X, right), "r"+strconv.Itoa(unique))
+		binaryIns = createAddition(getExprName(exp.X, leftUnique), getExprName(exp.X, rightUnique), "r"+strconv.Itoa(unique))
 	case token.MUL:
-		binaryIns = createMultiplication(getExprName(exp.X, left), getExprName(exp.X, right), "r"+strconv.Itoa(unique))
+		binaryIns = createMultiplication(getExprName(exp.X, leftUnique), getExprName(exp.X, rightUnique), "r"+strconv.Itoa(unique))
 	}
 	holdings := append(leftHoldings, binaryIns)
 	holdings = append(holdings, rightHoldings...)
