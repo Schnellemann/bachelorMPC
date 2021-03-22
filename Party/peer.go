@@ -2,7 +2,7 @@ package party
 
 import (
 	aux "MPC/Auxiliary"
-	nP "MPC/NetPackage"
+	netpack "MPC/Netpackage"
 	"encoding/gob"
 	"fmt"
 	"net"
@@ -15,20 +15,15 @@ type Peer struct {
 	Number       int
 	ipListen     string
 	cConnections chan net.Conn
-	cPackages    chan *NetPackage
-	cMessages    chan Message
+	cPackages    chan *netpack.NetPackage
+	cMessages    chan netpack.Message
 	connections  []ConnectionTuple
 	peerlist     *peerList
 }
 
 type peerList struct {
-	ipPorts []PeerTuple
+	ipPorts []netpack.PeerTuple
 	lock    sync.Mutex
-}
-
-type PeerTuple struct {
-	IpPort string
-	Number int
 }
 
 type ConnectionTuple struct {
@@ -41,12 +36,12 @@ func mkPeerList() *peerList {
 	return pl
 }
 
-func mkPeer(number int, messageChannel chan Message) *Peer {
+func MkPeer(number int, messageChannel chan netpack.Message) *Peer {
 	p := new(Peer)
 	p.Number = number
 	p.cMessages = messageChannel
 	p.peerlist = mkPeerList()
-	p.cPackages = make(chan *NetPackage)
+	p.cPackages = make(chan *netpack.NetPackage)
 	p.cConnections = make(chan net.Conn)
 
 	return p
@@ -56,7 +51,7 @@ func (p *Peer) handleConnection(dec *gob.Decoder) {
 	//A new peer has connected to us
 	//Start receiving packages
 	for {
-		receivedPackage := &NetPackage{}
+		receivedPackage := &netpack.NetPackage{}
 		err := dec.Decode(receivedPackage)
 		if err != nil {
 			fmt.Println("Could not decode package from peer")
@@ -109,12 +104,12 @@ func (p *Peer) sortConnections() {
 }
 
 func (p *Peer) sendPeerlist(encoder *gob.Encoder) {
-	peerPackage := new(NetPackage)
+	peerPackage := new(netpack.NetPackage)
 	peerPackage.IpPorts = p.peerlist.ipPorts
 	p.write(encoder, peerPackage)
 }
 
-func (p *Peer) write(encoder *gob.Encoder, pack *NetPackage) {
+func (p *Peer) write(encoder *gob.Encoder, pack *netpack.NetPackage) {
 	err := encoder.Encode(pack)
 	if err != nil {
 		fmt.Println("Could not encode transaction trying again")
@@ -123,7 +118,7 @@ func (p *Peer) write(encoder *gob.Encoder, pack *NetPackage) {
 	}
 }
 
-func (p *Peer) processPackage(pack *NetPackage) {
+func (p *Peer) processPackage(pack *netpack.NetPackage) {
 	if pack.Peer.IpPort != "" {
 		//New peer wants to connect to us
 		p.peerlist.lock.Lock()
@@ -137,7 +132,7 @@ func (p *Peer) processPackage(pack *NetPackage) {
 
 }
 
-func (p *Peer) processMessage(message Message) {
+func (p *Peer) processMessage(message netpack.Message) {
 
 }
 
@@ -157,7 +152,7 @@ func (p *Peer) connectToPeers(initialConn string) {
 }
 
 func (p *Peer) receivePeers(dec *gob.Decoder) {
-	recievedPeersPackage := NetPackage{}
+	recievedPeersPackage := netpack.NetPackage{}
 	err := dec.Decode(&recievedPeersPackage)
 	if err != nil {
 		fmt.Println("Could not decode peer list package from peer")
@@ -199,8 +194,8 @@ func (p *Peer) listenForConnections(totalPeers int, ip string, listenPort string
 }
 
 func (p *Peer) broadcastPeer(ipPort string) {
-	newPeerPackage := new(NetPackage)
-	newPeerPackage.Peer = PeerTuple{IpPort: ipPort, Number: p.Number}
+	newPeerPackage := new(netpack.NetPackage)
+	newPeerPackage.Peer = netpack.PeerTuple{IpPort: ipPort, Number: p.Number}
 	for _, c := range p.connections {
 		p.write(c.Connection, newPeerPackage)
 	}
@@ -209,7 +204,7 @@ func (p *Peer) broadcastPeer(ipPort string) {
 func (p *Peer) startPeer(totalPeers int, ip string, connectToPort string, listenOnPort string) {
 	p.ipListen = ip + ":" + listenOnPort
 	p.peerlist.lock.Lock()
-	p.peerlist.ipPorts = append(p.peerlist.ipPorts, PeerTuple{ip + ":" + listenOnPort, p.Number})
+	p.peerlist.ipPorts = append(p.peerlist.ipPorts, netpack.PeerTuple{ip + ":" + listenOnPort, p.Number})
 	fmt.Printf("adding own port: %v\n", ip+":"+listenOnPort)
 	p.peerlist.lock.Unlock()
 	go p.receiveFromChannels()

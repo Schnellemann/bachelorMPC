@@ -1,4 +1,4 @@
-package netPackage
+package netpackage
 
 type NetPackage struct {
 	IpPorts []PeerTuple
@@ -6,11 +6,20 @@ type NetPackage struct {
 	Peer    PeerTuple
 }
 
-type Message struct {
-	TreeLocation TreeLocation
-	Share		 Share
-	Signature    string
+type PeerTuple struct {
+	IpPort string
+	Number int
 }
 
-type TreeLocation struct {
+/*
+
+ */
+type Message struct {
+	Share     Share
+	Signature string
+}
+
+type Share struct {
+	Value  int64
+	Number int64
 }

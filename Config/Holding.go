@@ -4,7 +4,7 @@ type holding struct {
 	position int
 }
 
-func createAddition(left string, right string) holding {
+func createAddition(left string, right string) (hold holding) {
 	//TODO
-	return nil
+	return
 }

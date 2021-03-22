@@ -1,6 +1,7 @@
 package party
 
 import (
+	netpack "MPC/Netpackage"
 	"fmt"
 	"reflect"
 	"testing"
@@ -17,9 +18,9 @@ func TestConnection(t *testing.T) {
 	/*
 		Make the peers
 	*/
-	p := mkPeer(1, nil)
-	p2 := mkPeer(2, nil)
-	p3 := mkPeer(3, nil)
+	p := MkPeer(1, nil)
+	p2 := MkPeer(2, nil)
+	p3 := MkPeer(3, nil)
 
 	/*
 		Connect them
@@ -55,7 +56,7 @@ func TestConnection(t *testing.T) {
 
 }
 
-func contains(s []PeerTuple, e PeerTuple) bool {
+func contains(s []netpack.PeerTuple, e netpack.PeerTuple) bool {
 	for _, p := range s {
 		if p == e {
 			return true
@@ -65,9 +66,9 @@ func contains(s []PeerTuple, e PeerTuple) bool {
 }
 
 func TestConnectionlist(t *testing.T) {
-	p := mkPeer(1, nil)
-	p2 := mkPeer(2, nil)
-	p3 := mkPeer(3, nil)
+	p := MkPeer(1, nil)
+	p2 := MkPeer(2, nil)
+	p3 := MkPeer(3, nil)
 
 	p.startPeer(3, ip, "", "61515")
 	time.Sleep(1000 * time.Millisecond)
@@ -93,9 +94,9 @@ func TestConnectionlist(t *testing.T) {
 }
 
 func TestPeerlists(t *testing.T) {
-	p := mkPeer(1, nil)
-	p2 := mkPeer(2, nil)
-	p3 := mkPeer(3, nil)
+	p := MkPeer(1, nil)
+	p2 := MkPeer(2, nil)
+	p3 := MkPeer(3, nil)
 	peers := []Peer{*p, *p2, *p3}
 
 	p.startPeer(3, ip, "", "61515")
@@ -105,7 +106,7 @@ func TestPeerlists(t *testing.T) {
 	p3.startPeer(3, ip, "61515", "60417")
 	time.Sleep(1000 * time.Millisecond)
 
-	shouldHold := []PeerTuple{{ip + ":" + "61515", 1}, {ip + ":" + "60516", 2}, {ip + ":" + "60417", 3}}
+	shouldHold := []netpack.PeerTuple{{ip + ":" + "61515", 1}, {ip + ":" + "60516", 2}, {ip + ":" + "60417", 3}}
 
 	for i := 0; i < 3; i++ {
 		for _, j := range shouldHold {

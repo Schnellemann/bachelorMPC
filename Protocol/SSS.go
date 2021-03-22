@@ -2,6 +2,7 @@ package protocol
 
 import (
 	fields "MPC/Fields"
+	netpack "MPC/Netpackage"
 	"errors"
 	"math"
 )
@@ -10,11 +11,6 @@ type ShamirSecretSharing struct {
 	field  fields.Field
 	poly   []int64
 	degree int
-}
-
-type Share struct {
-	Value  int64
-	Number int64
 }
 
 func makeShamirSecretSharing(secret int64, fieldImp fields.Field, degree int) *ShamirSecretSharing {
@@ -30,7 +26,7 @@ func makeShamirSecretSharing(secret int64, fieldImp fields.Field, degree int) *S
 	return SSS
 }
 
-func (s ShamirSecretSharing) lagrangeInterpolation(shares []Share) (secret int64, err error) {
+func (s ShamirSecretSharing) lagrangeInterpolation(shares []netpack.Share) (secret int64, err error) {
 	if !(len(shares) > s.degree) {
 		return int64(0), errors.New("Lagrange: too few shares received")
 	}
@@ -50,9 +46,9 @@ func (s ShamirSecretSharing) lagrangeInterpolation(shares []Share) (secret int64
 	return s.field.Convert((int64(math.Round(result)))), nil
 }
 
-func (s ShamirSecretSharing) makeShares(numberOfParties int64) (shares []Share) {
+func (s ShamirSecretSharing) makeShares(numberOfParties int64) (shares []netpack.Share) {
 	for i := 1; i <= int(numberOfParties); i++ {
-		share := new(Share)
+		share := new(netpack.Share)
 		share.Number = int64(i)
 		for j, v := range s.poly {
 			share.Value = s.field.Add(share.Value, s.field.Multiply(v, s.field.Pow(int64(i), int64(j))))
