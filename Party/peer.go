@@ -2,10 +2,12 @@ package party
 
 import (
 	aux "MPC/Auxiliary"
+	nP "MPC/NetPackage"
 	"encoding/gob"
 	"fmt"
 	"net"
 	"os"
+	"sort"
 	"sync"
 )
 
@@ -14,7 +16,8 @@ type Peer struct {
 	ipListen     string
 	cConnections chan net.Conn
 	cPackages    chan *NetPackage
-	connections  []*gob.Encoder
+	cMessages    chan Message
+	connections  []ConnectionTuple
 	peerlist     *peerList
 }
 
@@ -28,14 +31,20 @@ type PeerTuple struct {
 	Number int
 }
 
+type ConnectionTuple struct {
+	Connection *gob.Encoder
+	Number     int
+}
+
 func mkPeerList() *peerList {
 	pl := new(peerList)
 	return pl
 }
 
-func mkPeer(number int) *Peer {
+func mkPeer(number int, messageChannel chan Message) *Peer {
 	p := new(Peer)
 	p.Number = number
+	p.cMessages = messageChannel
 	p.peerlist = mkPeerList()
 	p.cPackages = make(chan *NetPackage)
 	p.cConnections = make(chan net.Conn)
@@ -63,21 +72,40 @@ func (p *Peer) handleConnection(dec *gob.Decoder) {
 	}
 }
 
+func (p *Peer) sendShares() {
+	//shareList := p.makeShares(int64(len(p.connections)))
+	//for i := 0; i < len(shareList); i++ {
+	//netPackage := new(NetPackage)
+	//netPackage.Message.Share = shareList[i]
+	//This should work because connections are sorted in recieveFromChannels
+	//p.write(p.connections[i].Connection, netPackage)
+	//}
+}
+
 func (p *Peer) receiveFromChannels() {
 	for {
 		select {
 		case newConnection := <-p.cConnections:
 			encoder := gob.NewEncoder(newConnection)
 			decoder := gob.NewDecoder(newConnection)
-			p.connections = append(p.connections, encoder)
+			fmt.Printf("RemoteAddr for the new connection is: %v \n", newConnection.RemoteAddr)
+			fmt.Printf("All availeble connections for party %v: %v", p.Number, p.connections)
+			p.connections = append(p.connections, ConnectionTuple{encoder, p.Number})
+			//Sort connections by Number
+			p.sortConnections()
 			//send peers to the new connections
 			p.sendPeerlist(encoder)
 			go p.handleConnection(decoder)
-
 		case newPackage := <-p.cPackages:
 			p.processPackage(newPackage)
 		}
 	}
+}
+
+func (p *Peer) sortConnections() {
+	sort.SliceStable(p.connections, func(i, j int) bool {
+		return p.connections[i].Number < p.connections[j].Number
+	})
 }
 
 func (p *Peer) sendPeerlist(encoder *gob.Encoder) {
@@ -174,7 +202,7 @@ func (p *Peer) broadcastPeer(ipPort string) {
 	newPeerPackage := new(NetPackage)
 	newPeerPackage.Peer = PeerTuple{IpPort: ipPort, Number: p.Number}
 	for _, c := range p.connections {
-		p.write(c, newPeerPackage)
+		p.write(c.Connection, newPeerPackage)
 	}
 }
 
@@ -194,7 +222,7 @@ func (p *Peer) startPeer(totalPeers int, ip string, connectToPort string, listen
 		//Make the decoder such that we can decode the messages
 		dec := gob.NewDecoder(conn)
 		enc := gob.NewEncoder(conn)
-		p.connections = append(p.connections, enc)
+		p.connections = append(p.connections, ConnectionTuple{enc, p.Number})
 		p.receivePeers(dec)
 		p.connectToPeers(ip + ":" + connectToPort)
 		go p.handleConnection(dec)

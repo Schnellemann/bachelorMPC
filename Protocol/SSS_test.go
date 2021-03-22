@@ -1,4 +1,4 @@
-package party
+package protocol
 
 import (
 	fields "MPC/Fields"

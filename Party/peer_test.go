@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var ip string = "192.168.0.147"
+var ip string = "192.168.1.248"
 
 func assertEqualError(received interface{}, expected interface{}) string {
 	return fmt.Sprintf("Received %v (type %v), expected %v (type %v)", received, reflect.TypeOf(received), expected, reflect.TypeOf(expected))
@@ -17,9 +17,9 @@ func TestConnection(t *testing.T) {
 	/*
 		Make the peers
 	*/
-	p := mkPeer(1)
-	p2 := mkPeer(2)
-	p3 := mkPeer(3)
+	p := mkPeer(1, nil)
+	p2 := mkPeer(2, nil)
+	p3 := mkPeer(3, nil)
 
 	/*
 		Connect them
@@ -64,10 +64,38 @@ func contains(s []PeerTuple, e PeerTuple) bool {
 	return false
 }
 
+func TestConnectionlist(t *testing.T) {
+	p := mkPeer(1, nil)
+	p2 := mkPeer(2, nil)
+	p3 := mkPeer(3, nil)
+
+	p.startPeer(3, ip, "", "61515")
+	time.Sleep(1000 * time.Millisecond)
+	p2.startPeer(3, ip, "61515", "60516")
+	time.Sleep(1000 * time.Millisecond)
+	p3.startPeer(3, ip, "61515", "60417")
+	time.Sleep(1000 * time.Millisecond)
+
+	fmt.Printf("The connection %v holds: \n", p.Number)
+	for _, con := range p.connections {
+		fmt.Printf("%v \n", con.Number)
+	}
+
+	fmt.Printf("The connection %v holds: \n", p2.Number)
+	for _, con := range p2.connections {
+		fmt.Printf("%v \n", con.Number)
+	}
+
+	fmt.Printf("The connection %v holds: \n", p3.Number)
+	for _, con := range p3.connections {
+		fmt.Printf("%v \n", con.Number)
+	}
+}
+
 func TestPeerlists(t *testing.T) {
-	p := mkPeer(1)
-	p2 := mkPeer(2)
-	p3 := mkPeer(3)
+	p := mkPeer(1, nil)
+	p2 := mkPeer(2, nil)
+	p3 := mkPeer(3, nil)
 	peers := []Peer{*p, *p2, *p3}
 
 	p.startPeer(3, ip, "", "61515")
