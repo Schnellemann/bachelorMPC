@@ -11,9 +11,6 @@ type PeerTuple struct {
 	Number int
 }
 
-/*
-
- */
 type Message struct {
 	Share     Share
 	Signature string

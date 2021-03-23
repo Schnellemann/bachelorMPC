@@ -6,14 +6,23 @@ import (
 	"io/ioutil"
 	"os"
 )
+
 /*
 	Config struct for different fields needed to setup network.
 */
 type Config struct {
-	Expression string `json:"expression"`
+	Expression      string  `json:"expression"`
+	NumberOfParties float64 `json:"numberOfParties"`
+	Ip              string  `json:"ip"`
+	Port            string  `json:"port"`
+	PartyNr         float64 `json:"partyNr"`
 }
 
-func readConfig(filepath string) Config {
+type ProtocolConfig struct {
+	Configs []Config `json:"configs"`
+}
+
+func readConfig(filepath string) ProtocolConfig {
 	jsonFile, err := os.Open(filepath)
 	defer jsonFile.Close()
 	if err != nil {
@@ -23,12 +32,13 @@ func readConfig(filepath string) Config {
 	if err != nil {
 		fmt.Println("Error reading config file")
 	}
-	var conf Config
+	var conf ProtocolConfig
 	err = json.Unmarshal(byteValue, &conf)
 	if err != nil {
 		fmt.Println("Error unmarshalling json")
 		fmt.Println("Error:", err)
 	}
+	fmt.Println(conf)
 
 	return conf
 }

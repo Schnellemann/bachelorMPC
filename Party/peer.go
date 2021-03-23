@@ -83,7 +83,7 @@ func (p *Peer) receiveFromChannels() {
 		case newConnection := <-p.cConnections:
 			encoder := gob.NewEncoder(newConnection)
 			decoder := gob.NewDecoder(newConnection)
-			fmt.Printf("RemoteAddr for the new connection is: %v \n", newConnection.RemoteAddr)
+			//fmt.Printf("RemoteAddr for the new connection is: %v \n", newConnection.RemoteAddr)
 			fmt.Printf("All availeble connections for party %v: %v", p.Number, p.connections)
 			p.connections = append(p.connections, ConnectionTuple{encoder, p.Number})
 			//Sort connections by Number

@@ -1,3 +1,25 @@
 {
-    "expression": "(p1 + p2) + p3" 
+    "configs": [
+        {
+            "expression": "(p1 + p2) + p3",
+            "numberOfParties": 3,
+            "ip": "127.0.1.1",
+            "port": "6969",
+            "partyNr": 1
+        },
+        {
+            "expression": "(p1 + p2) + p3",
+            "numberOfParties": 3,
+            "ip": "127.0.1.1",
+            "port": "6970",
+            "partyNr": 2
+        },
+        {
+            "expression": "(p1 + p2) + p3",
+            "numberOfParties": 3,
+            "ip": "127.0.1.1",
+            "port": "6971",
+            "partyNr": 3
+        } 
+    ]
 }

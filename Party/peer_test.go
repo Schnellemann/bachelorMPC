@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var ip string = "192.168.1.248"
+var ip string = "192.168.1.193"
 
 func assertEqualError(received interface{}, expected interface{}) string {
 	return fmt.Sprintf("Received %v (type %v), expected %v (type %v)", received, reflect.TypeOf(received), expected, reflect.TypeOf(expected))

@@ -1,3 +1,4 @@
 {
-    "expression": "(p1 + p2) + p3"
+    "expression": "(p1 + p2) + p3",
+    "numberOfParties": "3"
 }

@@ -14,7 +14,6 @@ type Ceps struct {
 }
 
 func mkProtocol() {
-	numberOfParties := 3
 	proc := new(Ceps)
 	proc.cMessages = make(chan netpack.Message)
 	proc.peer = party.MkPeer(numberOfParties, proc.cMessages)
