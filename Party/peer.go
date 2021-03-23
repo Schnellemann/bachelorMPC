@@ -2,6 +2,7 @@ package party
 
 import (
 	aux "MPC/Auxiliary"
+	config "MPC/Config"
 	netpack "MPC/Netpackage"
 	"encoding/gob"
 	"fmt"
@@ -36,7 +37,7 @@ func mkPeerList() *peerList {
 	return pl
 }
 
-func MkPeer(number int, messageChannel chan netpack.Message) *Peer {
+func MkPeer(config config.Config, messageChannel chan netpack.Message) *Peer {
 	p := new(Peer)
 	p.Number = number
 	p.cMessages = messageChannel
