@@ -8,13 +8,13 @@ import (
 )
 
 type Ceps struct {
-	config    config.Config
+	config    *config.Config
 	peer      *party.Peer
 	shamir    *ShamirSecretSharing
 	cMessages chan netpack.Message
 }
 
-func mkProtocol(config config.Config, secret int64, field field.Field) {
+func mkProtocol(config *config.Config, secret int64, field field.Field) {
 	proc := new(Ceps)
 	proc.cMessages = make(chan netpack.Message)
 	proc.config = config
