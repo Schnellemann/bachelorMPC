@@ -67,14 +67,13 @@ func (p *Peer) handleConnection(dec *gob.Decoder) {
 	}
 }
 
-func (p *Peer) sendShares() {
-	//shareList := p.makeShares(int64(len(p.connections)))
-	//for i := 0; i < len(shareList); i++ {
-	//netPackage := new(NetPackage)
-	//netPackage.Message.Share = shareList[i]
-	//This should work because connections are sorted in recieveFromChannels
-	//p.write(p.connections[i].Connection, netPackage)
-	//}
+func (p *Peer) sendShares(shareList []netpack.Share) {
+	for i := 0; i < len(shareList); i++ {
+		netPackage := new(netpack.NetPackage)
+		netPackage.Message.Share = shareList[i]
+		//This should work because connections are sorted in recieveFromChannels
+		p.write(p.connections[i].Connection, netPackage)
+	}
 }
 
 func (p *Peer) receiveFromChannels() {
@@ -83,9 +82,6 @@ func (p *Peer) receiveFromChannels() {
 		case newConnection := <-p.cConnections:
 			encoder := gob.NewEncoder(newConnection)
 			decoder := gob.NewDecoder(newConnection)
-			//fmt.Printf("RemoteAddr for the new connection is: %v \n", newConnection.RemoteAddr)
-			fmt.Printf("All availeble connections for party %v: %v", p.Number, p.connections)
-			p.connections = append(p.connections, ConnectionTuple{encoder, p.Number})
 			//Sort connections by Number
 			p.sortConnections()
 			//send peers to the new connections
@@ -174,6 +170,8 @@ func (p *Peer) listenForConnections(totalPeers int, ip string, listenPort string
 	name, _ := os.Hostname()
 	_, port, _ := net.SplitHostPort(li.Addr().String())
 	addrs, _ := net.LookupHost(name)
+	fmt.Println("This is the listenPort:")
+	fmt.Println(listenPort)
 	fmt.Println("Other peers can connect to me on the following ip:port")
 	for _, addr := range addrs {
 		if aux.IsIpv4Regex(addr) {
@@ -184,6 +182,7 @@ func (p *Peer) listenForConnections(totalPeers int, ip string, listenPort string
 	i := 1
 	for i < totalPeers {
 		conn, err := li.Accept()
+		//TODO update Connectionstuple with encoder and number of the connected peer
 		if err != nil {
 			fmt.Println("Failed connection on accept")
 			return
@@ -205,7 +204,6 @@ func (p *Peer) startPeer(totalPeers int, ip string, connectToPort string, listen
 	p.ipListen = ip + ":" + listenOnPort
 	p.peerlist.lock.Lock()
 	p.peerlist.ipPorts = append(p.peerlist.ipPorts, netpack.PeerTuple{ip + ":" + listenOnPort, p.Number})
-	fmt.Printf("adding own port: %v\n", ip+":"+listenOnPort)
 	p.peerlist.lock.Unlock()
 	go p.receiveFromChannels()
 	//Test on localhost

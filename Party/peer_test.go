@@ -8,13 +8,13 @@ import (
 	"time"
 )
 
-var ip string = "192.168.1.193"
+var ip string = "127.0.1.1"
 
 func assertEqualError(received interface{}, expected interface{}) string {
 	return fmt.Sprintf("Received %v (type %v), expected %v (type %v)", received, reflect.TypeOf(received), expected, reflect.TypeOf(expected))
 }
 
-func TestConnection(t *testing.T) {
+func TestConnections(t *testing.T) {
 	/*
 		Make the peers
 	*/
@@ -25,12 +25,12 @@ func TestConnection(t *testing.T) {
 	/*
 		Connect them
 	*/
-	p.startPeer(3, ip, "", "61515")
-	time.Sleep(1000 * time.Millisecond)
-	p2.startPeer(3, ip, "61515", "60516")
-	time.Sleep(1000 * time.Millisecond)
-	p3.startPeer(3, ip, "61515", "60417")
-	time.Sleep(1000 * time.Millisecond)
+	p.startPeer(3, ip, "", "40002")
+	time.Sleep(3 * time.Second)
+	p2.startPeer(3, ip, "40002", "60716")
+	time.Sleep(3 * time.Second)
+	p3.startPeer(3, ip, "40002", "60817")
+	time.Sleep(3 * time.Second)
 
 	if len(p.peerlist.ipPorts) != 3 {
 		t.Errorf(assertEqualError(len(p.peerlist.ipPorts), 3))
