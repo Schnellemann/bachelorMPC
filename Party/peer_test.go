@@ -1,6 +1,7 @@
 package party
 
 import (
+	config "MPC/Config"
 	netpack "MPC/Netpackage"
 	"fmt"
 	"reflect"
@@ -18,9 +19,10 @@ func TestConnections(t *testing.T) {
 	/*
 		Make the peers
 	*/
-	p := MkPeer(1, nil)
-	p2 := MkPeer(2, nil)
-	p3 := MkPeer(3, nil)
+	conf := new(config.Config)
+	p := MkPeer(conf, nil)
+	p2 := MkPeer(conf, nil)
+	p3 := MkPeer(conf, nil)
 
 	/*
 		Connect them
@@ -66,9 +68,10 @@ func contains(s []netpack.PeerTuple, e netpack.PeerTuple) bool {
 }
 
 func TestConnectionlist(t *testing.T) {
-	p := MkPeer(1, nil)
-	p2 := MkPeer(2, nil)
-	p3 := MkPeer(3, nil)
+	conf := new(config.Config)
+	p := MkPeer(conf, nil)
+	p2 := MkPeer(conf, nil)
+	p3 := MkPeer(conf, nil)
 
 	p.startPeer(3, ip, "", "61515")
 	time.Sleep(1000 * time.Millisecond)
@@ -94,9 +97,10 @@ func TestConnectionlist(t *testing.T) {
 }
 
 func TestPeerlists(t *testing.T) {
-	p := MkPeer(1, nil)
-	p2 := MkPeer(2, nil)
-	p3 := MkPeer(3, nil)
+	conf := new(config.Config)
+	p := MkPeer(conf, nil)
+	p2 := MkPeer(conf, nil)
+	p3 := MkPeer(conf, nil)
 	peers := []Peer{*p, *p2, *p3}
 
 	p.startPeer(3, ip, "", "61515")

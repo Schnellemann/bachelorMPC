@@ -37,9 +37,9 @@ func mkPeerList() *peerList {
 	return pl
 }
 
-func MkPeer(config config.Config, messageChannel chan netpack.Message) *Peer {
+func MkPeer(config *config.Config, messageChannel chan netpack.Message) *Peer {
 	p := new(Peer)
-	p.Number = number
+	p.Number = int(config.PartyNr)
 	p.cMessages = messageChannel
 	p.peerlist = mkPeerList()
 	p.cPackages = make(chan *netpack.NetPackage)
