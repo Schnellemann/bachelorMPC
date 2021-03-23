@@ -18,19 +18,10 @@ func parseExpression(exp string) ast.Expr {
 
 }
 
-func isValid(instructions []instruction) error {
-	//TODO
-	return nil
-}
-
 //Returns result identifier and a list of instructions which are the operations that needs to be computed in the given order
 //returns convertErr if conversion failed
 func convertAstToExpressionList(exp ast.Expr) (string, []instruction, error) {
 	resNum, instructions, err := convertAstAux(0, exp)
-	isValidErr := isValid(instructions)
-	if isValidErr != nil {
-		return "", nil, isValidErr
-	}
 	return "r" + strconv.Itoa(resNum), instructions, err
 }
 

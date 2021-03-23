@@ -131,7 +131,3 @@ func TestParseExpressionBigCombined(t *testing.T) {
 	}
 	//fmt.Print(instructions)
 }
-
-func TestIsValid(t *testing.T) {
-
-}
