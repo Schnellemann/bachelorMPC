@@ -5,6 +5,7 @@ import (
 	netpack "MPC/Netpackage"
 	"errors"
 	"math"
+	"strconv"
 )
 
 type ShamirSecretSharing struct {
@@ -37,8 +38,14 @@ func (s ShamirSecretSharing) lagrangeInterpolation(shares []netpack.Share) (secr
 		denominator := float64(1)
 		for j := 0; j <= s.degree; j++ {
 			if j != i {
-				enumerator = enumerator * float64(-shares[j].Number)
-				denominator = denominator * float64(shares[i].Number-shares[j].Number)
+				identifierI := shares[i].Identifier
+				identifierJ := shares[j].Identifier
+				// (┛ಠ_ಠ)┛彡┻━┻ (┛ಠ_ಠ)┛彡┻━┻ (┛ಠ_ಠ)┛彡┻━┻ (┛ಠ_ಠ)┛彡┻━┻ (┛ಠ_ಠ)┛彡┻━┻
+				numberI, _ := strconv.Atoi(string(identifierI[1]))
+				numberJ, _ := strconv.Atoi(string(identifierJ[1]))
+
+				enumerator = enumerator * float64(-numberJ)
+				denominator = denominator * float64(numberI-numberJ)
 			}
 		}
 		result += enumerator / denominator
@@ -49,7 +56,7 @@ func (s ShamirSecretSharing) lagrangeInterpolation(shares []netpack.Share) (secr
 func (s ShamirSecretSharing) makeShares(numberOfParties int64) (shares []netpack.Share) {
 	for i := 1; i <= int(numberOfParties); i++ {
 		share := new(netpack.Share)
-		share.Number = int64(i)
+		share.Identifier = "p" + strconv.Itoa(i)
 		for j, v := range s.poly {
 			share.Value = s.field.Add(share.Value, s.field.Multiply(v, s.field.Pow(int64(i), int64(j))))
 		}

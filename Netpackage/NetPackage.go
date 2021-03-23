@@ -17,6 +17,6 @@ type Message struct {
 }
 
 type Share struct {
-	Value  int64
-	Number int64
+	Value      int64
+	Identifier string
 }

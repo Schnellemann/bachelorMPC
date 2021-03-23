@@ -19,6 +19,7 @@ type Peer struct {
 	cMessages    chan netpack.Message
 	connections  []ConnectionTuple
 	peerlist     *peerList
+	Progress     chan int
 }
 
 type peerList struct {
@@ -123,12 +124,8 @@ func (p *Peer) processPackage(pack *netpack.NetPackage) {
 	} else {
 		//Message
 		m := pack.Message
-		p.processMessage(m)
+		p.cMessages <- m
 	}
-
-}
-
-func (p *Peer) processMessage(message netpack.Message) {
 
 }
 
@@ -200,10 +197,10 @@ func (p *Peer) broadcastPeer(ipPort string) {
 	}
 }
 
-func (p *Peer) startPeer(totalPeers int, ip string, connectToPort string, listenOnPort string) {
+func (p *Peer) StartPeer(totalPeers int, ip string, connectToPort string, listenOnPort string) {
 	p.ipListen = ip + ":" + listenOnPort
 	p.peerlist.lock.Lock()
-	p.peerlist.ipPorts = append(p.peerlist.ipPorts, netpack.PeerTuple{ip + ":" + listenOnPort, p.Number})
+	p.peerlist.ipPorts = append(p.peerlist.ipPorts, netpack.PeerTuple{IpPort: ip + ":" + listenOnPort, Number: p.Number})
 	p.peerlist.lock.Unlock()
 	go p.receiveFromChannels()
 	//Test on localhost
