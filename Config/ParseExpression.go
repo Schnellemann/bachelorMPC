@@ -26,7 +26,7 @@ func isValid(instructions []instruction) error {
 //Returns result identifier and a list of instructions which are the operations that needs to be computed in the given order
 //returns convertErr if conversion failed
 func convertAstToExpressionList(exp ast.Expr) (string, []instruction, error) {
-	resNum, instructions, err := convertAstAux(1, exp)
+	resNum, instructions, err := convertAstAux(0, exp)
 	isValidErr := isValid(instructions)
 	if isValidErr != nil {
 		return "", nil, isValidErr
@@ -39,7 +39,7 @@ func convertAstAux(unique int, exp ast.Expr) (int, []instruction, error) {
 	case *ast.BinaryExpr:
 		return convertBinaryExpr(unique, exp)
 	case *ast.BasicLit, *ast.Ident:
-		return 0, nil, nil
+		return unique, nil, nil
 	case *ast.ParenExpr:
 		return convertAstAux(unique, exp.X)
 	default:
@@ -78,8 +78,8 @@ func convertBinaryExpr(unique int, exp *ast.BinaryExpr) (int, []instruction, err
 		}
 
 	}
-	instructions := append(leftInstructions, binaryIns)
-	instructions = append(instructions, rightInstructions...)
+	instructions := append(leftInstructions, rightInstructions...)
+	instructions = append(instructions, binaryIns)
 	return unique, instructions, nil
 }
 
