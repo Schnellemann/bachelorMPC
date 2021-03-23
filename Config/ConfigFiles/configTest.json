@@ -1,0 +1,33 @@
+{
+    "constantconfig": {
+        "ipports":
+        [
+            "127.0.1.1:6969",
+            "127.0.1.1:6970",
+            "127.0.1.1:6971"
+        ],
+        "expression": "(p1 + p2) + p3",
+        "numberOfParties": 3
+    },
+    "variableconfigs": [
+        {
+            
+            "ip": "127.0.1.1",
+            "port": "6969",
+            "partyNr": 1,
+            "secret": 1
+        },
+        {
+            "ip": "127.0.1.1",
+            "port": "6970",
+            "partyNr": 2,
+            "secret": 2
+        },
+        {
+            "ip": "127.0.1.1",
+            "port": "6971",
+            "partyNr": 3,
+            "secret": 3
+        } 
+    ]
+}

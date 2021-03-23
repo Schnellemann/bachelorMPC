@@ -2,38 +2,41 @@ package protocol
 
 import (
 	config "MPC/Config"
+	field "MPC/Fields"
 	netpack "MPC/Netpackage"
 	party "MPC/Party"
+	"math"
 )
 
 type Ceps struct {
-	config    config.Config
+	config    *config.Config
 	peer      *party.Peer
-	shamir    ShamirSecretSharing
+	shamir    *ShamirSecretSharing
 	cMessages chan netpack.Message
 	results   map[string]int
 }
 
-func mkProtocol(numberOfParties int) *Ceps {
+func mkProtocol(config *config.Config, secret int64, field field.Field) *Ceps {
 	proc := new(Ceps)
 	proc.cMessages = make(chan netpack.Message)
-	proc.peer = party.MkPeer(numberOfParties, proc.cMessages)
+	proc.config = config
+	proc.peer = party.MkPeer(config, proc.cMessages)
+	proc.shamir = makeShamirSecretSharing(secret, field, int(math.Ceil(proc.config.ConstantConfig.NumberOfParties/2)-1))
 	proc.results = make(map[string]int)
 	return proc
 }
 
 func (prot *Ceps) run() {
 	//read config
-	number := 0
-	//Start peer (go routine)
-	p := party.MkPeer(number, prot.cMessages)
 	totalPeers := 0
 	ipString := "(┛ಠ_ಠ)┛彡┻━┻"
 	connectPort := "┬─┬ノ( ◕◡◕ ノ)"
 	listenPort := "(┛ಠ_ಠ)┛彡┻━┻"
 	partyProgress := make(chan int)
-	p.Progress = partyProgress
-	p.StartPeer(totalPeers, ipString, connectPort, listenPort)
+	prot.peer.Progress = partyProgress
+
+	//Start peer
+	prot.peer.StartPeer(totalPeers, ipString, connectPort, listenPort)
 
 	//wait group for start peer
 	<-partyProgress

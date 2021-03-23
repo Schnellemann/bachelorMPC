@@ -1,0 +1,11 @@
+{
+    "configs": [
+        {
+            "expression": "(p1 + p2) + p3",
+            "numberOfParties": 3,
+            "ip": "127.0.1.1",
+            "port": "6969",
+            "partyNr": 1
+        } 
+    ]
+}

@@ -7,22 +7,33 @@ import (
 	"os"
 )
 
+type Config struct {
+	VariableConfig VariableConfig
+	ConstantConfig ConstantConfig
+}
+
 /*
 	Config struct for different fields needed to setup network.
 */
-type Config struct {
-	Expression      string  `json:"expression"`
-	NumberOfParties float64 `json:"numberOfParties"`
-	Ip              string  `json:"ip"`
-	Port            string  `json:"port"`
-	PartyNr         float64 `json:"partyNr"`
+type VariableConfig struct {
+	Ip      string  `json:"ip"`
+	Port    string  `json:"port"`
+	PartyNr float64 `json:"partyNr"`
+	Secret  int64   `json:"secret"`
+}
+
+type ConstantConfig struct {
+	Expression      string   `json:"expression"`
+	NumberOfParties float64  `json:"numberOfParties"`
+	Ipports         []string `json:"ipports"`
 }
 
 type ProtocolConfig struct {
-	Configs []Config `json:"configs"`
+	VariableConfigs []VariableConfig `json:"variableconfigs"`
+	ConstantConfig  ConstantConfig   `json:"constantconfig"`
 }
 
-func readConfig(filepath string) ProtocolConfig {
+func ReadConfig(filepath string) (configList []Config) {
 	jsonFile, err := os.Open(filepath)
 	defer jsonFile.Close()
 	if err != nil {
@@ -38,7 +49,11 @@ func readConfig(filepath string) ProtocolConfig {
 		fmt.Println("Error unmarshalling json")
 		fmt.Println("Error:", err)
 	}
-	fmt.Println(conf)
-
-	return conf
+	for _, varConf := range conf.VariableConfigs {
+		config := new(Config)
+		config.VariableConfig = varConf
+		config.ConstantConfig = conf.ConstantConfig
+		configList = append(configList, *config)
+	}
+	return
 }
