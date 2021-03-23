@@ -40,7 +40,6 @@ func (s ShamirSecretSharing) lagrangeInterpolation(shares []netpack.Share) (secr
 			if j != i {
 				identifierI := shares[i].Identifier
 				identifierJ := shares[j].Identifier
-				// (┛ಠ_ಠ)┛彡┻━┻ (┛ಠ_ಠ)┛彡┻━┻ (┛ಠ_ಠ)┛彡┻━┻ (┛ಠ_ಠ)┛彡┻━┻ (┛ಠ_ಠ)┛彡┻━┻
 				numberI, _ := strconv.Atoi(string(identifierI[1]))
 				numberJ, _ := strconv.Atoi(string(identifierJ[1]))
 

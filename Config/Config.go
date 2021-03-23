@@ -16,10 +16,10 @@ type Config struct {
 	Config struct for different fields needed to setup network.
 */
 type VariableConfig struct {
-	Ip      string  `json:"ip"`
-	Port    string  `json:"port"`
-	PartyNr float64 `json:"partyNr"`
-	Secret  int64   `json:"secret"`
+	ListenIpPort  string  `json:"listen"`
+	ConnectIpPort string  `json:"connect"`
+	PartyNr       float64 `json:"partyNr"`
+	Secret        int64   `json:"secret"`
 }
 
 type ConstantConfig struct {

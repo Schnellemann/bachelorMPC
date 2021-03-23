@@ -28,15 +28,10 @@ func mkProtocol(config *config.Config, secret int64, field field.Field) *Ceps {
 
 func (prot *Ceps) run() {
 	//read config
-	totalPeers := 0
-	ipString := "(┛ಠ_ಠ)┛彡┻━┻"
-	connectPort := "┬─┬ノ( ◕◡◕ ノ)"
-	listenPort := "(┛ಠ_ಠ)┛彡┻━┻"
 	partyProgress := make(chan int)
 	prot.peer.Progress = partyProgress
-
 	//Start peer
-	prot.peer.StartPeer(totalPeers, ipString, connectPort, listenPort)
+	prot.peer.StartPeer(int(prot.config.ConstantConfig.NumberOfParties), prot.config.VariableConfig.ConnectIpPort, prot.config.VariableConfig.ListenIpPort)
 
 	//wait group for start peer
 	<-partyProgress

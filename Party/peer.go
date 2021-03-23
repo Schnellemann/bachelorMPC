@@ -157,9 +157,8 @@ func (p *Peer) receivePeers(dec *gob.Decoder) {
 	p.peerlist.ipPorts = append(p.peerlist.ipPorts, recievedPeersPackage.IpPorts...)
 }
 
-func (p *Peer) listenForConnections(totalPeers int, ip string, listenPort string) {
-	var ipport = ip + ":" + listenPort
-	li, err := net.Listen("tcp", ipport)
+func (p *Peer) listenForConnections(totalPeers int, listenOnAddress string) {
+	li, err := net.Listen("tcp", listenOnAddress)
 	if err != nil {
 		fmt.Println("Error in listening")
 		return
@@ -168,8 +167,6 @@ func (p *Peer) listenForConnections(totalPeers int, ip string, listenPort string
 	name, _ := os.Hostname()
 	_, port, _ := net.SplitHostPort(li.Addr().String())
 	addrs, _ := net.LookupHost(name)
-	fmt.Println("This is the listenPort:")
-	fmt.Println(listenPort)
 	fmt.Println("Other peers can connect to me on the following ip:port")
 	for _, addr := range addrs {
 		if aux.IsIpv4Regex(addr) {
@@ -177,7 +174,7 @@ func (p *Peer) listenForConnections(totalPeers int, ip string, listenPort string
 			p.broadcastPeer(addr + ":" + port)
 		}
 	}
-	i := 1
+	i := len(p.connections) + 1
 	for i < totalPeers {
 		conn, err := li.Accept()
 		//TODO update Connectionstuple with encoder and number of the connected peer
@@ -188,6 +185,8 @@ func (p *Peer) listenForConnections(totalPeers int, ip string, listenPort string
 		p.cConnections <- conn
 		i++
 	}
+	//End of phase 1
+	p.Progress <- 1
 }
 
 func (p *Peer) broadcastPeer(ipPort string) {
@@ -198,14 +197,14 @@ func (p *Peer) broadcastPeer(ipPort string) {
 	}
 }
 
-func (p *Peer) StartPeer(totalPeers int, ip string, connectToPort string, listenOnPort string) {
-	p.ipListen = ip + ":" + listenOnPort
+func (p *Peer) StartPeer(totalPeers int, connectToAddress string, listenOnAddress string) {
+	p.ipListen = listenOnAddress
 	p.peerlist.lock.Lock()
-	p.peerlist.ipPorts = append(p.peerlist.ipPorts, netpack.PeerTuple{IpPort: ip + ":" + listenOnPort, Number: p.Number})
+	p.peerlist.ipPorts = append(p.peerlist.ipPorts, netpack.PeerTuple{IpPort: listenOnAddress, Number: p.Number})
 	p.peerlist.lock.Unlock()
 	go p.receiveFromChannels()
 	//Test on localhost
-	conn, err := net.Dial("tcp", ip+":"+connectToPort)
+	conn, err := net.Dial("tcp", connectToAddress)
 	if err != nil {
 		fmt.Println("Could not connect peer")
 	} else if conn != nil {
@@ -215,8 +214,8 @@ func (p *Peer) StartPeer(totalPeers int, ip string, connectToPort string, listen
 		enc := gob.NewEncoder(conn)
 		p.connections = append(p.connections, ConnectionTuple{enc, p.Number})
 		p.receivePeers(dec)
-		p.connectToPeers(ip + ":" + connectToPort)
+		p.connectToPeers(connectToAddress)
 		go p.handleConnection(dec)
 	}
-	go p.listenForConnections(totalPeers, ip, listenOnPort)
+	go p.listenForConnections(totalPeers, listenOnAddress)
 }

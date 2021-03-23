@@ -27,11 +27,11 @@ func TestConnections(t *testing.T) {
 	/*
 		Connect them
 	*/
-	p.StartPeer(3, ip, "", "40002")
+	p.StartPeer(3, ip+":", ip+":40002")
 	time.Sleep(3 * time.Second)
-	p2.StartPeer(3, ip, "40002", "60716")
+	p2.StartPeer(3, ip+":40002", ip+":60716")
 	time.Sleep(3 * time.Second)
-	p3.StartPeer(3, ip, "40002", "60817")
+	p3.StartPeer(3, ip+":40002", ip+":60817")
 	time.Sleep(3 * time.Second)
 
 	if len(p.peerlist.ipPorts) != 3 {
@@ -73,11 +73,11 @@ func TestConnectionlist(t *testing.T) {
 	p2 := MkPeer(conf, nil)
 	p3 := MkPeer(conf, nil)
 
-	p.StartPeer(3, ip, "", "61515")
+	p.StartPeer(3, ip+":", ip+":61515")
 	time.Sleep(1000 * time.Millisecond)
-	p2.StartPeer(3, ip, "61515", "60516")
+	p2.StartPeer(3, ip+":61515", ip+":60516")
 	time.Sleep(1000 * time.Millisecond)
-	p3.StartPeer(3, ip, "61515", "60417")
+	p3.StartPeer(3, ip+":61515", ip+":60417")
 	time.Sleep(1000 * time.Millisecond)
 
 	fmt.Printf("The connection %v holds: \n", p.Number)
@@ -103,11 +103,11 @@ func TestPeerlists(t *testing.T) {
 	p3 := MkPeer(conf, nil)
 	peers := []Peer{*p, *p2, *p3}
 
-	p.StartPeer(3, ip, "", "61515")
+	p.StartPeer(3, ip+":", ip+":61515")
 	time.Sleep(1000 * time.Millisecond)
-	p2.StartPeer(3, ip, "61515", "60516")
+	p2.StartPeer(3, ip+":61515", ip+":60516")
 	time.Sleep(1000 * time.Millisecond)
-	p3.StartPeer(3, ip, "61515", "60417")
+	p3.StartPeer(3, ip+":61515", ip+":60417")
 	time.Sleep(1000 * time.Millisecond)
 
 	shouldHold := []netpack.PeerTuple{{ip + ":" + "61515", 1}, {ip + ":" + "60516", 2}, {ip + ":" + "60417", 3}}

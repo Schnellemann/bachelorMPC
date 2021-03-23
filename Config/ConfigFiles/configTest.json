@@ -12,20 +12,20 @@
     "variableconfigs": [
         {
             
-            "ip": "127.0.1.1",
-            "port": "6969",
+            "listen": "127.0.1.1:6969",
+            "connect": "",
             "partyNr": 1,
             "secret": 1
         },
         {
-            "ip": "127.0.1.1",
-            "port": "6970",
+            "listen": "127.0.1.1:6970",
+            "connect": "127.0.1.1:6969",
             "partyNr": 2,
             "secret": 2
         },
         {
-            "ip": "127.0.1.1",
-            "port": "6971",
+            "listen": "127.0.1.1:6971",
+            "connect": "127.0.1.1:6970",
             "partyNr": 3,
             "secret": 3
         } 
