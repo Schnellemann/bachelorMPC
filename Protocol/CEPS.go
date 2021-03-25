@@ -9,11 +9,11 @@ import (
 )
 
 type Ceps struct {
-	config    *config.Config
-	peer      *party.Peer
-	shamir    *ShamirSecretSharing
-	cMessages chan netpack.Message
-	results   map[string]int
+	config              *config.Config
+	peer                *party.Peer
+	shamir              *ShamirSecretSharing
+	cMessages           chan netpack.Message
+	intermediaryResults map[int][]netpack.Share
 }
 
 func mkProtocol(config *config.Config, secret int64, field field.Field) *Ceps {
@@ -22,46 +22,57 @@ func mkProtocol(config *config.Config, secret int64, field field.Field) *Ceps {
 	proc.config = config
 	proc.peer = party.MkPeer(config, proc.cMessages)
 	proc.shamir = makeShamirSecretSharing(secret, field, int(math.Ceil(proc.config.ConstantConfig.NumberOfParties/2)-1))
-	proc.results = make(map[string]int)
+	proc.intermediaryResults = make(map[int][]netpack.Share)
 	return proc
 }
 
-func (prot *Ceps) run() {
-	//read config
+func (prot *Ceps) run() int {
+
 	partyProgress := make(chan int)
 	prot.peer.Progress = partyProgress
 	//Start peer
-	prot.peer.StartPeer(int(prot.config.ConstantConfig.NumberOfParties), prot.config.VariableConfig.ConnectIpPort, prot.config.VariableConfig.ListenIpPort)
+	prot.peer.StartPeer()
 
 	//wait group for start peer
 	<-partyProgress
+	//Convert string expression into instruction list
+	exp := prot.config.ConstantConfig.Expression
+	astExp := config.ParseExpression(exp)
+	finalResultName, instructionList, err := config.ConvertAstToExpressionList(astExp)
+	if err != nil {
+		//TODO maybe shut down peer?
+		println(err)
+		return 0
+	}
+
 	//Do instructions
+	for i, ins := range instructionList {
+		switch ins.Op {
+		case config.Add:
+			prot.add(ins)
+		case config.Multiply:
+			prot.multiply(i, ins)
+		case config.Scalar:
+			prot.scalar(ins)
+		}
+	}
 
 	//output reconstruction
+	return prot.outputReconstruction(finalResultName)
 }
 
-func calculate(instructionList []config.Instruction) netpack.Share {
-	for _, ins := range instructionList {
-		op := ins.Op
-		switch op {
-		case config.Add:
-			add(ins)
-		case config.Multiply:
-		case config.Scalar:
-		}
-
-	}
-	return netpack.Share{Value: 0, Identifier: "Hello"}
+func (prot *Ceps) outputReconstruction(finalResultName string) int {
+	return 0
 }
 
-func add(ins config.Instruction) {
+func (prot *Ceps) add(ins config.Instruction) {
 
 }
 
-func multiply() {
+func (prot *Ceps) multiply(instructionNumber int, ins config.Instruction) {
 
 }
 
-func scalar() {
+func (prot *Ceps) scalar(ins config.Instruction) {
 
 }
