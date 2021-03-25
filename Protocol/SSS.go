@@ -52,10 +52,11 @@ func (s ShamirSecretSharing) lagrangeInterpolation(shares []netpack.Share) (secr
 	return s.field.Convert((int64(math.Round(result)))), nil
 }
 
-func (s ShamirSecretSharing) makeShares(numberOfParties int64) (shares []netpack.Share) {
+func (s ShamirSecretSharing) makeShares(numberOfParties int64, identifier string) (shares []netpack.Share) {
 	for i := 1; i <= int(numberOfParties); i++ {
 		share := new(netpack.Share)
-		share.Identifier = "p" + strconv.Itoa(i)
+		//TODO this is wrong should be my party num always
+		share.Identifier = identifier
 		for j, v := range s.poly {
 			share.Value = s.field.Add(share.Value, s.field.Multiply(v, s.field.Pow(int64(i), int64(j))))
 		}

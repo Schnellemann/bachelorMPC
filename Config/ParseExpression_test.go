@@ -66,6 +66,25 @@ func TestParseExpressionScalar(t *testing.T) {
 	if instructions[0].Result != res {
 		t.Errorf("Result did not match returned %v and created %v", res, instructions[0].Result)
 	}
+
+	toConvert = "p1*2"
+	exp = ParseExpression(toConvert)
+	res, instructions, _ = ConvertAstToExpressionList(exp)
+	if len(instructions) != 1 {
+		t.Errorf("Number of instructions incorrect got %v expected %v", len(instructions), 1)
+	}
+	if instructions[0].Op != Scalar {
+		t.Errorf("Wrong instruction got %v expected %v", instructions[0].Op, Scalar)
+	}
+	if instructions[0].Left != "2" {
+		t.Errorf("Wrong instruction left side got %v expected %v", instructions[0].Left, "2")
+	}
+	if instructions[0].Right != "p1" {
+		t.Errorf("Wrong instruction right side got %v expected %v", instructions[0].Right, "p1")
+	}
+	if instructions[0].Result != res {
+		t.Errorf("Result did not match returned %v and created %v", res, instructions[0].Result)
+	}
 }
 
 func TestParseExpressionCombined(t *testing.T) {

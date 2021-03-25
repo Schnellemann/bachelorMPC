@@ -37,3 +37,5 @@ Identify parties according to config.
 
 
 
+#FlipTheTable -> Make sure that connections actually get send the correct shares in peer
+- eg. sort connections on num
