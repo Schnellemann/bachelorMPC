@@ -19,10 +19,13 @@ func TestConnections(t *testing.T) {
 	/*
 		Make the peers
 	*/
-	conf := config.ReadConfig(filepath)
+	configs := config.ReadConfig(filepath)
+	conf := &configs[0]
+	conf2 := &configs[1]
+	conf3 := &configs[2]
 	p := MkPeer(conf, nil)
-	p2 := MkPeer(conf, nil)
-	p3 := MkPeer(conf, nil)
+	p2 := MkPeer(conf2, nil)
+	p3 := MkPeer(conf3, nil)
 
 	/*
 		Connect them
@@ -68,17 +71,26 @@ func contains(s []netpack.PeerTuple, e netpack.PeerTuple) bool {
 }
 
 func TestConnectionlist(t *testing.T) {
-	conf := new(config.Config)
+	/*
+		Make the peers
+	*/
+	configs := config.ReadConfig(filepath)
+	conf := &configs[0]
+	conf2 := &configs[1]
+	conf3 := &configs[2]
 	p := MkPeer(conf, nil)
-	p2 := MkPeer(conf, nil)
-	p3 := MkPeer(conf, nil)
+	p2 := MkPeer(conf2, nil)
+	p3 := MkPeer(conf3, nil)
 
-	p.StartPeer(3, ip+":", ip+":61515")
-	time.Sleep(1000 * time.Millisecond)
-	p2.StartPeer(3, ip+":61515", ip+":60516")
-	time.Sleep(1000 * time.Millisecond)
-	p3.StartPeer(3, ip+":61515", ip+":60417")
-	time.Sleep(1000 * time.Millisecond)
+	/*
+		Connect them
+	*/
+	p.StartPeer()
+	time.Sleep(3 * time.Second)
+	p2.StartPeer()
+	time.Sleep(3 * time.Second)
+	p3.StartPeer()
+	time.Sleep(3 * time.Second)
 
 	fmt.Printf("The connection %v holds: \n", p.Number)
 	for _, con := range p.connections {
@@ -97,20 +109,30 @@ func TestConnectionlist(t *testing.T) {
 }
 
 func TestPeerlists(t *testing.T) {
-	conf := new(config.Config)
+	/*
+		Make the peers
+	*/
+	configs := config.ReadConfig(filepath)
+	conf := &configs[0]
+	conf2 := &configs[1]
+	conf3 := &configs[2]
 	p := MkPeer(conf, nil)
-	p2 := MkPeer(conf, nil)
-	p3 := MkPeer(conf, nil)
+	p2 := MkPeer(conf2, nil)
+	p3 := MkPeer(conf3, nil)
+
+	/*
+		Connect them
+	*/
+	p.StartPeer()
+	time.Sleep(3 * time.Second)
+	p2.StartPeer()
+	time.Sleep(3 * time.Second)
+	p3.StartPeer()
+	time.Sleep(3 * time.Second)
+
 	peers := []Peer{*p, *p2, *p3}
 
-	p.StartPeer(3, ip+":", ip+":61515")
-	time.Sleep(1000 * time.Millisecond)
-	p2.StartPeer(3, ip+":61515", ip+":60516")
-	time.Sleep(1000 * time.Millisecond)
-	p3.StartPeer(3, ip+":61515", ip+":60417")
-	time.Sleep(1000 * time.Millisecond)
-
-	shouldHold := []netpack.PeerTuple{{ip + ":" + "61515", 1}, {ip + ":" + "60516", 2}, {ip + ":" + "60417", 3}}
+	shouldHold := []netpack.PeerTuple{{"127.0.1.1:40002", 1}, {"127.0.1.1:6970", 2}, {"127.0.1.1:6971", 3}}
 
 	for i := 0; i < 3; i++ {
 		for _, j := range shouldHold {
