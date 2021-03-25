@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func parseExpression(exp string) ast.Expr {
+func ParseExpression(exp string) ast.Expr {
 	aexp, err := parser.ParseExpr(exp)
 	if err != nil {
 		fmt.Printf("parsing failed: %s\n", err)
@@ -20,7 +20,7 @@ func parseExpression(exp string) ast.Expr {
 
 //Returns result identifier and a list of instructions which are the operations that needs to be computed in the given order
 //returns convertErr if conversion failed
-func convertAstToExpressionList(exp ast.Expr) (string, []Instruction, error) {
+func ConvertAstToExpressionList(exp ast.Expr) (string, []Instruction, error) {
 	resNum, instructions, err := convertAstAux(0, exp)
 	return "r" + strconv.Itoa(resNum), instructions, err
 }

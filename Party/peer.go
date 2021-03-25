@@ -14,13 +14,13 @@ import (
 
 type Peer struct {
 	Number       int
-	ipListen     string
 	cConnections chan net.Conn
 	cPackages    chan *netpack.NetPackage
 	cMessages    chan netpack.Message
 	connections  []ConnectionTuple
 	peerlist     *peerList
 	Progress     chan int
+	config       *config.Config
 }
 
 type peerList struct {
@@ -40,6 +40,7 @@ func mkPeerList() *peerList {
 
 func MkPeer(config *config.Config, messageChannel chan netpack.Message) *Peer {
 	p := new(Peer)
+	p.config = config
 	p.Number = int(config.VariableConfig.PartyNr)
 	p.cMessages = messageChannel
 	p.peerlist = mkPeerList()
@@ -133,7 +134,7 @@ func (p *Peer) processPackage(pack *netpack.NetPackage) {
 func (p *Peer) connectToPeers(initialConn string) {
 	for _, peer := range p.peerlist.ipPorts {
 		//Make sure you don't connect to the initial peer again
-		if peer.IpPort != initialConn && peer.IpPort != p.ipListen {
+		if peer.IpPort != initialConn && peer.IpPort != p.config.VariableConfig.ListenIpPort {
 			conn, err := net.Dial("tcp", peer.IpPort)
 			if err != nil {
 				fmt.Println("Failed to connect to " + peer.IpPort)
@@ -197,14 +198,13 @@ func (p *Peer) broadcastPeer(ipPort string) {
 	}
 }
 
-func (p *Peer) StartPeer(totalPeers int, connectToAddress string, listenOnAddress string) {
-	p.ipListen = listenOnAddress
+func (p *Peer) StartPeer() {
 	p.peerlist.lock.Lock()
-	p.peerlist.ipPorts = append(p.peerlist.ipPorts, netpack.PeerTuple{IpPort: listenOnAddress, Number: p.Number})
+	p.peerlist.ipPorts = append(p.peerlist.ipPorts, netpack.PeerTuple{IpPort: p.config.VariableConfig.ListenIpPort, Number: p.Number})
 	p.peerlist.lock.Unlock()
 	go p.receiveFromChannels()
 	//Test on localhost
-	conn, err := net.Dial("tcp", connectToAddress)
+	conn, err := net.Dial("tcp", p.config.VariableConfig.ConnectIpPort)
 	if err != nil {
 		fmt.Println("Could not connect peer")
 	} else if conn != nil {
@@ -214,8 +214,8 @@ func (p *Peer) StartPeer(totalPeers int, connectToAddress string, listenOnAddres
 		enc := gob.NewEncoder(conn)
 		p.connections = append(p.connections, ConnectionTuple{enc, p.Number})
 		p.receivePeers(dec)
-		p.connectToPeers(connectToAddress)
+		p.connectToPeers(p.config.VariableConfig.ConnectIpPort)
 		go p.handleConnection(dec)
 	}
-	go p.listenForConnections(totalPeers, listenOnAddress)
+	go p.listenForConnections(int(p.config.ConstantConfig.NumberOfParties), p.config.VariableConfig.ListenIpPort)
 }

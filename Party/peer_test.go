@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var ip string = "127.0.1.1"
+var filepath string = "ConfigFiles/configTest.json"
 
 func assertEqualError(received interface{}, expected interface{}) string {
 	return fmt.Sprintf("Received %v (type %v), expected %v (type %v)", received, reflect.TypeOf(received), expected, reflect.TypeOf(expected))
@@ -19,7 +19,7 @@ func TestConnections(t *testing.T) {
 	/*
 		Make the peers
 	*/
-	conf := new(config.Config)
+	conf := config.ReadConfig(filepath)
 	p := MkPeer(conf, nil)
 	p2 := MkPeer(conf, nil)
 	p3 := MkPeer(conf, nil)
@@ -27,11 +27,11 @@ func TestConnections(t *testing.T) {
 	/*
 		Connect them
 	*/
-	p.StartPeer(3, ip+":", ip+":40002")
+	p.StartPeer()
 	time.Sleep(3 * time.Second)
-	p2.StartPeer(3, ip+":40002", ip+":60716")
+	p2.StartPeer()
 	time.Sleep(3 * time.Second)
-	p3.StartPeer(3, ip+":40002", ip+":60817")
+	p3.StartPeer()
 	time.Sleep(3 * time.Second)
 
 	if len(p.peerlist.ipPorts) != 3 {

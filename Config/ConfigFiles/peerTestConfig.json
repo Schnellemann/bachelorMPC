@@ -1,0 +1,33 @@
+{
+    "constantconfig": {
+        "ipports":
+        [
+            "127.0.1.1:40002",
+            "127.0.1.1:60716",
+            "127.0.1.1:60817"
+        ],
+        "expression": "(p1 + p2) + p3",
+        "numberOfParties": 3
+    },
+    "variableconfigs": [
+        {
+            
+            "listen": "127.0.1.1:40002",
+            "connect": "",
+            "partyNr": 1,
+            "secret": 1
+        },
+        {
+            "listen": "127.0.1.1:60716",
+            "connect": "127.0.1.1:40002",
+            "partyNr": 2,
+            "secret": 2
+        },
+        {
+            "listen": "127.0.1.1:60817",
+            "connect": "127.0.1.1:60716",
+            "partyNr": 3,
+            "secret": 3
+        } 
+    ]
+}
