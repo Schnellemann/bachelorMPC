@@ -5,6 +5,8 @@ import (
 	field "MPC/Fields"
 	netpack "MPC/Netpackage"
 	party "MPC/Party"
+	"context"
+	"fmt"
 	"math"
 )
 
@@ -35,6 +37,9 @@ func (prot *Ceps) run() int {
 
 	//wait group for start peer
 	<-partyProgress
+	//Start receiving messages from the network
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	go prot.receive(ctx)
 	//Convert string expression into instruction list
 	exp := prot.config.ConstantConfig.Expression
 	astExp := config.ParseExpression(exp)
@@ -58,11 +63,24 @@ func (prot *Ceps) run() int {
 	}
 
 	//output reconstruction
-	return prot.outputReconstruction(finalResultName)
+	res := prot.outputReconstruction(finalResultName)
+	cancelFunc()
+	return res
 }
 
-func (prot *Ceps) outputReconstruction(finalResultName string) int {
-	return 0
+func (prot *Ceps) receive(ctx context.Context) {
+	for {
+		select {
+		case message := <-prot.cMessages:
+			//TODO
+		case <-ctx.Done():
+			fmt.Println("Protocol received shutdown signal, closing messageChannel!")
+			close(prot.cMessages)
+			fmt.Println("Protocol closed messageChannel")
+			return
+		}
+
+	}
 }
 
 func (prot *Ceps) add(ins config.Instruction) {
@@ -75,4 +93,8 @@ func (prot *Ceps) multiply(instructionNumber int, ins config.Instruction) {
 
 func (prot *Ceps) scalar(ins config.Instruction) {
 
+}
+
+func (prot *Ceps) outputReconstruction(finalResultName string) int {
+	return 0
 }
