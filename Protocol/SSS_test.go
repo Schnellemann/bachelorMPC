@@ -2,6 +2,7 @@ package protocol
 
 import (
 	fields "MPC/Fields"
+	"strconv"
 	"testing"
 )
 
@@ -26,7 +27,7 @@ func TestModPrime(t *testing.T) {
 func TestShareMaking(t *testing.T) {
 	SSS := makeShamirSecretSharing(42, fields.MakeModPrime(43), 1)
 	SSS.poly = []int64{4, 7, 9, 1, 11}
-	shares := SSS.makeShares(5)
+	shares := SSS.makeShares(5, "p1")
 	if shares[0].Value != (4+7+9+1+11)%43 {
 		t.Errorf("First share not computed correctly got %v expected %v", shares[0].Value, (4+7+9+1+11)%43)
 	}
@@ -46,9 +47,12 @@ func TestShareMaking(t *testing.T) {
 
 func TestLagrangeInterpolation(t *testing.T) {
 	secret := int64(42)
-	SSS := makeShamirSecretSharing(secret, fields.MakeModPrime(43), 10)
-	shares := SSS.makeShares(11)
-	secretLagrange, _ := SSS.lagrangeInterpolation(shares)
+	SSS := makeShamirSecretSharing(secret, fields.MakeModPrime(43), 4)
+	shares := SSS.makeShares(5, "p1")
+	for i := 0; i < 5; i++ {
+		shares[i].Identifier = "p" + strconv.Itoa(i+1)
+	}
+	secretLagrange, _ := SSS.lagrangeInterpolation(shares, 4)
 	if secretLagrange != secret {
 		t.Errorf("Wrong secret, got %v expected %v", secretLagrange, secret)
 	}

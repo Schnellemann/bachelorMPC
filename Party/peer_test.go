@@ -22,21 +22,21 @@ func TestConnections(t *testing.T) {
 	conf := &configs[0]
 	conf2 := &configs[1]
 	conf3 := &configs[2]
-	p := MkPeer(conf, nil)
-	p2 := MkPeer(conf2, nil)
-	p3 := MkPeer(conf3, nil)
+	p := MkPeer(conf)
+	p2 := MkPeer(conf2)
+	p3 := MkPeer(conf3)
 
 	/*
 		Connect them
 	*/
 	fmt.Println("Started peer 1")
-	p.StartPeer()
+	p.StartPeer(nil)
 	time.Sleep(1000 * time.Millisecond)
 	fmt.Println("Started peer 2")
-	p2.StartPeer()
+	p2.StartPeer(nil)
 	time.Sleep(1 * time.Second)
 	fmt.Println("Started peer 3")
-	p3.StartPeer()
+	p3.StartPeer(nil)
 	time.Sleep(1 * time.Second)
 
 	if len(p.peerlist.ipPorts) != 3 {
@@ -52,12 +52,10 @@ func TestConnections(t *testing.T) {
 		fmt.Printf("peerlist for p3: %v", p3.peerlist.ipPorts)
 	}
 	if len(p.connections) != 2 {
-
 		t.Errorf(assertEqualError(len(p.connections), 2))
 	}
 	if len(p2.connections) != 2 {
 		t.Errorf(assertEqualError(len(p2.connections), 2))
-		fmt.Printf("P2 connections is: %v", p.connections)
 	}
 	if len(p3.connections) != 2 {
 		t.Errorf(assertEqualError(len(p3.connections), 2))
@@ -82,18 +80,18 @@ func TestPeerlists(t *testing.T) {
 	conf := &configs[0]
 	conf2 := &configs[1]
 	conf3 := &configs[2]
-	p := MkPeer(conf, nil)
-	p2 := MkPeer(conf2, nil)
-	p3 := MkPeer(conf3, nil)
+	p := MkPeer(conf)
+	p2 := MkPeer(conf2)
+	p3 := MkPeer(conf3)
 
 	/*
 		Connect them
 	*/
-	p.StartPeer()
+	p.StartPeer(nil)
 	time.Sleep(3 * time.Second)
-	p2.StartPeer()
+	p2.StartPeer(nil)
 	time.Sleep(3 * time.Second)
-	p3.StartPeer()
+	p3.StartPeer(nil)
 	time.Sleep(3 * time.Second)
 
 	peers := []Peer{*p, *p2, *p3}

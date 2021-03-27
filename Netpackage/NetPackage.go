@@ -2,18 +2,13 @@ package netpackage
 
 type NetPackage struct {
 	IpPorts []string
-	Message Message
+	Share Share
 	Peer    string
 }
 
 type PeerTuple struct {
 	IpPort string
 	Number int
-}
-
-type Message struct {
-	Share     Share
-	Signature string
 }
 
 type Share struct {

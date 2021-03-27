@@ -1,6 +1,7 @@
 package party
 
 import (
+	aux "MPC/Auxiliary"
 	config "MPC/Config"
 	netpack "MPC/Netpackage"
 	"encoding/gob"
@@ -12,12 +13,12 @@ import (
 
 type Peer struct {
 	Number      int
-	cMessages   chan netpack.Message
+	cShare      chan netpack.Share
 	connections []ConnectionTuple
 	peerlist    *peerList
-	Progress    chan int
+	progress    chan int
 	config      *config.Config
-	decoderMap  map[*gob.Decoder]*gob.Encoder
+	decoderMap  map[*gob.Decoder]*ConnectionTuple
 }
 
 type peerList struct {
@@ -35,17 +36,21 @@ func mkPeerList() *peerList {
 	return pl
 }
 
-func MkPeer(config *config.Config, messageChannel chan netpack.Message) *Peer {
+func (p *Peer) SetProgress(progress chan int) {
+	p.progress = progress
+}
+
+func MkPeer(config *config.Config) *Peer {
 	p := new(Peer)
 	p.config = config
 	p.Number = int(config.VariableConfig.PartyNr)
-	p.cMessages = messageChannel
 	p.peerlist = mkPeerList()
-	p.decoderMap = make(map[*gob.Decoder]*gob.Encoder)
+	p.decoderMap = make(map[*gob.Decoder]*ConnectionTuple)
 	return p
 }
 
-func (p *Peer) StartPeer() {
+func (p *Peer) StartPeer(shareChannel chan netpack.Share) {
+	p.cShare = shareChannel
 	p.peerlist.lock.Lock()
 	p.peerlist.ipPorts = append(p.peerlist.ipPorts, p.config.VariableConfig.ListenIpPort)
 	p.peerlist.lock.Unlock()
@@ -59,9 +64,10 @@ func (p *Peer) StartPeer() {
 			//Make the decoder such that we can decode the messages
 			dec := gob.NewDecoder(conn)
 			enc := gob.NewEncoder(conn)
-			p.addEntryDecoderMap(dec, enc)
 			conTuble := new(ConnectionTuple)
 			conTuble.Connection = enc
+			conTuble.Number = p.getPartyNrFromIp(p.config.VariableConfig.ConnectIpPort)
+			p.addEntryDecoderMap(dec, conTuble)
 			p.connections = append(p.connections, *conTuble)
 			p.receivePeers(dec)
 			p.connectToPeers()
@@ -76,7 +82,7 @@ func (p *Peer) StartPeer() {
 func (p *Peer) SendShares(shareList []netpack.Share) {
 	for i := 0; i < len(shareList); i++ {
 		netPackage := new(netpack.NetPackage)
-		netPackage.Message.Share = shareList[i]
+		netPackage.Share = shareList[i]
 		//This should work because connections are sorted in recieveFromChannels
 		p.write(p.connections[i].Connection, netPackage)
 	}
@@ -85,15 +91,12 @@ func (p *Peer) SendShares(shareList []netpack.Share) {
 func (p *Peer) sendPeerlist(encoder *gob.Encoder) {
 	peerPackage := new(netpack.NetPackage)
 	peerPackage.IpPorts = p.peerlist.ipPorts
-	fmt.Printf("Sending peerlist %v, from party %v \n", p.peerlist.ipPorts, p.Number)
 	p.write(encoder, peerPackage)
 }
 
 func (p *Peer) broadcastPeer(ipPort string) {
 	newPeerPackage := new(netpack.NetPackage)
 	newPeerPackage.Peer = ipPort
-	fmt.Println("Broadcast: " + ipPort)
-	fmt.Printf("Nr of connections: %v in party %v \n", len(p.connections), p.Number)
 	for _, c := range p.connections {
 		p.write(c.Connection, newPeerPackage)
 	}
@@ -108,6 +111,14 @@ func (p *Peer) write(encoder *gob.Encoder, pack *netpack.NetPackage) {
 	}
 }
 
+func (p *Peer) SendFinal(share netpack.Share) {
+	pack := new(netpack.NetPackage)
+	pack.Share = share
+	for _, conTup := range p.connections {
+		p.write(conTup.Connection, pack)
+	}
+}
+
 // Recieve Methods
 func (p *Peer) receivePeers(dec *gob.Decoder) {
 	recievedPeersPackage := netpack.NetPackage{}
@@ -116,21 +127,21 @@ func (p *Peer) receivePeers(dec *gob.Decoder) {
 		fmt.Println("Could not decode peer list package from peer")
 		return
 	}
-	fmt.Printf("Recieving peers in party: %v \n", p.Number)
 	p.peerlist.lock.Lock()
 	p.peerlist.ipPorts = append(p.peerlist.ipPorts, recievedPeersPackage.IpPorts...)
 	p.peerlist.lock.Unlock()
-	fmt.Printf("Party: %v Peerlist: %v \n", p.Number, p.peerlist.ipPorts)
 }
 
-func (p *Peer) addConnection(newConnection net.Conn) {
+func (p *Peer) addConnection(newConnection net.Conn, ip string) {
 	encoder := gob.NewEncoder(newConnection)
 	decoder := gob.NewDecoder(newConnection)
-	p.addEntryDecoderMap(decoder, encoder)
 	conTuble := new(ConnectionTuple)
+	if ip != "" {
+		conTuble.Number = p.getPartyNrFromIp(ip)
+	}
 	conTuble.Connection = encoder
+	p.addEntryDecoderMap(decoder, conTuble)
 	p.connections = append(p.connections, *conTuble)
-	fmt.Println("Adding connection")
 	//send peers to the new connections
 	p.sendPeerlist(encoder)
 	go p.handleConnection(decoder)
@@ -152,15 +163,16 @@ func (p *Peer) handleConnection(dec *gob.Decoder) {
 			//Only if we're actually waiting for the peerlist
 			if receivedPackage.Peer != "" {
 				//This is a peer broadcast, so add the peer to the peer list and connect the encoder to the p.number.
-				fmt.Printf("Recieved a peerbroadcast: %v in party: %v \n", receivedPackage.Peer, p.Number)
 				p.peerlist.lock.Lock()
 				p.peerlist.ipPorts = append(p.peerlist.ipPorts, receivedPackage.Peer)
 				p.peerlist.lock.Unlock()
+				p.decoderMap[dec].Number = p.getPartyNrFromIp(receivedPackage.Peer)
+
 			} else if receivedPackage.IpPorts == nil {
 				//If we receive IpPorts we should ignore it, we handle this
 				//Only if we're actually waiting for the peerlist
-				m := receivedPackage.Message
-				p.cMessages <- m
+				s := receivedPackage.Share
+				p.cShare <- s
 			}
 		}
 	}
@@ -172,8 +184,8 @@ func (p *Peer) sortConnections() {
 	})
 }
 
-func (p *Peer) addEntryDecoderMap(decoder *gob.Decoder, encoder *gob.Encoder) {
-	p.decoderMap[decoder] = encoder
+func (p *Peer) addEntryDecoderMap(decoder *gob.Decoder, conTuble *ConnectionTuple) {
+	p.decoderMap[decoder] = conTuble
 }
 
 func (p *Peer) connectToPeers() {
@@ -186,7 +198,7 @@ func (p *Peer) connectToPeers() {
 				fmt.Println("Failed to connect to " + ip)
 				fmt.Println(err)
 			} else {
-				p.addConnection(conn)
+				p.addConnection(conn, ip)
 			}
 		}
 	}
@@ -209,9 +221,13 @@ func (p *Peer) listenForConnections(totalPeers int, listenOnAddress string) {
 			fmt.Println("Failed connection on accept")
 			return
 		}
-		p.addConnection(conn)
+		p.addConnection(conn, "")
 		i++
 	}
 	//End of phase 1
-	p.Progress <- 1
+	p.progress <- 1
+}
+
+func (p *Peer) getPartyNrFromIp(ip string) int {
+	return aux.SliceIndex(int(p.config.ConstantConfig.NumberOfParties-1), func(i int) bool { return p.config.ConstantConfig.Ipports[i] == ip })
 }

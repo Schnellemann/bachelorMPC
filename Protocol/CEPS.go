@@ -9,45 +9,58 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"sync"
 )
 
 type Ceps struct {
-	config         *config.Config
-	peer           *party.Peer
-	shamir         *ShamirSecretSharing
-	cMessages      chan netpack.Message
-	receivedShares map[string]*netpack.Share
-	degree         int
+	config    *config.Config
+	peer      party.IPeer
+	shamir    *ShamirSecretSharing
+	cMessages chan netpack.Share
+	rShares   rShares
+	degree    int
+	fShares   fShares
 }
 
-func mkProtocol(config *config.Config, secret int64, field field.Field) *Ceps {
+type fShares struct {
+	finalShares []netpack.Share
+	mu          sync.Mutex
+}
+
+type rShares struct {
+	receivedShares map[string]*netpack.Share
+	mu             sync.Mutex
+}
+
+func mkProtocol(config *config.Config, secret int64, field field.Field, peer party.IPeer) *Ceps {
 	prot := new(Ceps)
-	prot.cMessages = make(chan netpack.Message)
+	prot.cMessages = make(chan netpack.Share)
 	prot.config = config
-	prot.peer = party.MkPeer(config, prot.cMessages)
+	prot.peer = peer
 	prot.degree = int(math.Ceil(prot.config.ConstantConfig.NumberOfParties/2) - 1)
 	prot.shamir = makeShamirSecretSharing(secret, field, prot.degree)
-	prot.receivedShares = make(map[string]*netpack.Share)
+	prot.rShares = rShares{receivedShares: make(map[string]*netpack.Share)}
 	return prot
 }
 
-func (prot *Ceps) run() int {
+func (prot *Ceps) run() int64 {
 
 	partyProgress := make(chan int)
-	prot.peer.Progress = partyProgress
+	prot.peer.SetProgress(partyProgress)
 	//Start peer
-	prot.peer.StartPeer()
+	prot.peer.StartPeer(prot.cMessages)
 
 	//wait group for start peer
 	<-partyProgress
 	//Start receiving messages from the network
 	ctx, cancelFunc := context.WithCancel(context.Background())
+	defer cancelFunc()
 
 	go prot.receive(ctx)
 	//Convert string expression into instruction list
 	exp := prot.config.ConstantConfig.Expression
 	astExp := config.ParseExpression(exp)
-	finalResultName, instructionList, err := config.ConvertAstToExpressionList(astExp)
+	finalResult, instructionList, err := config.ConvertAstToExpressionList(astExp)
 	if err != nil {
 		//TODO maybe shut down peer?
 		println(err)
@@ -67,8 +80,9 @@ func (prot *Ceps) run() int {
 	}
 
 	//output reconstruction
-	res := prot.outputReconstruction(finalResultName)
-	cancelFunc()
+	res := prot.outputReconstruction(finalResult)
+
+	fmt.Printf("Party %v got %v as the final result\n", int(prot.config.VariableConfig.PartyNr), res)
 	return res
 }
 
@@ -76,8 +90,15 @@ func (prot *Ceps) receive(ctx context.Context) {
 	for {
 		select {
 		case message := <-prot.cMessages:
-			//TODO
-			fmt.Printf(message.Signature)
+			if string(message.Identifier[0]) == "o" {
+				prot.fShares.mu.Lock()
+				prot.fShares.finalShares = append(prot.fShares.finalShares, message)
+				prot.fShares.mu.Unlock()
+			} else {
+				prot.rShares.mu.Lock()
+				prot.rShares.receivedShares[message.Identifier] = &message
+				prot.rShares.mu.Unlock()
+			}
 
 		case <-ctx.Done():
 			fmt.Println("Protocol received shutdown signal, closing messageChannel!")
@@ -93,7 +114,9 @@ func (prot *Ceps) waitForShares(needToWaitOn []string) {
 	shares := make(map[string]*netpack.Share)
 	for {
 		for _, s := range needToWaitOn {
-			temp := prot.receivedShares[s]
+			prot.rShares.mu.Lock()
+			temp := prot.rShares.receivedShares[s]
+			prot.rShares.mu.Unlock()
 			if temp != nil {
 				shares[s] = temp
 			}
@@ -109,19 +132,29 @@ func (prot *Ceps) addResultShare(insResult string, value int64) {
 	resultShare := &netpack.Share{}
 	resultShare.Value = value
 	resultShare.Identifier = "o" + strconv.Itoa(int(prot.config.VariableConfig.PartyNr))
-	prot.receivedShares[insResult] = resultShare
+	prot.rShares.mu.Lock()
+	prot.rShares.receivedShares[insResult] = resultShare
+	prot.rShares.mu.Unlock()
 }
 
 func (prot *Ceps) add(ins config.Instruction) {
 	prot.waitForShares([]string{ins.Left, ins.Right})
-	value := prot.shamir.field.Add(prot.receivedShares[ins.Left].Value, prot.receivedShares[ins.Right].Value)
+	prot.rShares.mu.Lock()
+	leftVal := prot.rShares.receivedShares[ins.Left].Value
+	rightVal := prot.rShares.receivedShares[ins.Right].Value
+	prot.rShares.mu.Unlock()
+	value := prot.shamir.field.Add(leftVal, rightVal)
 	prot.addResultShare(ins.Result, value)
 }
 
 func (prot *Ceps) multiply(instructionNumber int, ins config.Instruction) {
 	prot.waitForShares([]string{ins.Left, ins.Right})
 	//This is not the s0 value, but each party's perception of the value that they will use in the new polynomial
-	secretValue := prot.shamir.field.Multiply(prot.receivedShares[ins.Left].Value, prot.receivedShares[ins.Right].Value)
+	prot.rShares.mu.Lock()
+	leftVal := prot.rShares.receivedShares[ins.Left].Value
+	rightVal := prot.rShares.receivedShares[ins.Right].Value
+	prot.rShares.mu.Unlock()
+	secretValue := prot.shamir.field.Multiply(leftVal, rightVal)
 	SSS := makeShamirSecretSharing(secretValue, prot.shamir.field, prot.degree)
 	toSendIdentifier := "m" + strconv.Itoa(instructionNumber) + "," + strconv.Itoa(int(prot.config.VariableConfig.PartyNr))
 	shares := SSS.makeShares(int64(prot.config.ConstantConfig.NumberOfParties), toSendIdentifier)
@@ -148,10 +181,42 @@ func (prot *Ceps) scalar(ins config.Instruction) {
 		fmt.Printf("Received non-integer as scalar in instruction")
 		return
 	}
-	value := prot.shamir.field.Multiply(int64(scalar), prot.receivedShares[ins.Right].Value)
+	prot.rShares.mu.Lock()
+	varValue := prot.rShares.receivedShares[ins.Right].Value
+	prot.rShares.mu.Unlock()
+	value := prot.shamir.field.Multiply(int64(scalar), varValue)
 	prot.addResultShare(ins.Result, value)
 }
 
-func (prot *Ceps) outputReconstruction(finalResultName string) int {
-	return 0
+func (prot *Ceps) outputReconstruction(finalResult string) int64 {
+	//Send out result share
+	prot.rShares.mu.Lock()
+	resultShare := prot.rShares.receivedShares[finalResult]
+	prot.rShares.mu.Unlock()
+	resultShare.Identifier = "o" + strconv.Itoa(int(prot.config.VariableConfig.PartyNr))
+	prot.peer.SendFinal(*resultShare)
+	prot.fShares.mu.Lock()
+	prot.fShares.finalShares = append(prot.fShares.finalShares, *resultShare)
+	prot.fShares.mu.Unlock()
+	shares := prot.waitForFinalShares()
+	result, err := prot.shamir.lagrangeInterpolation(shares, prot.degree)
+	if err != nil {
+		println(err)
+		return 0
+	}
+	return result
+}
+
+func (prot *Ceps) waitForFinalShares() []netpack.Share {
+	//Could be made with observer pattern, register an observer when this is called, an observer
+	//could just be a chan int, each time you get a new package you do notify which sends a signal on all (multiple) channels for each wait method
+	for {
+		prot.fShares.mu.Lock()
+		if len(prot.fShares.finalShares) > prot.degree {
+			break
+		}
+		prot.fShares.mu.Unlock()
+	}
+	return prot.fShares.finalShares
+
 }
