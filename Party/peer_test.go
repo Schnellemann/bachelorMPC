@@ -34,10 +34,10 @@ func TestConnections(t *testing.T) {
 	time.Sleep(1000 * time.Millisecond)
 	fmt.Println("Started peer 2")
 	p2.StartPeer()
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
 	fmt.Println("Started peer 3")
 	p3.StartPeer()
-	time.Sleep(10 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	if len(p.peerlist.ipPorts) != 3 {
 		t.Errorf(assertEqualError(len(p.peerlist.ipPorts), 3))
