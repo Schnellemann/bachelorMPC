@@ -1,9 +1,9 @@
 package netpackage
 
 type NetPackage struct {
-	IpPorts []PeerTuple
+	IpPorts []string
 	Message Message
-	Peer    PeerTuple
+	Peer    string
 }
 
 type PeerTuple struct {

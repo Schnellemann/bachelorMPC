@@ -7,8 +7,8 @@ import (
 
 func TestParseExpressionAdd(t *testing.T) {
 	toConvert := "p1+p2"
-	exp := parseExpression(toConvert)
-	res, instructions, _ := convertAstToExpressionList(exp)
+	exp := ParseExpression(toConvert)
+	res, instructions, _ := ConvertAstToExpressionList(exp)
 	if len(instructions) != 1 {
 		t.Errorf("Number of instructions incorrect got %v expected %v", len(instructions), 1)
 	}
@@ -28,8 +28,8 @@ func TestParseExpressionAdd(t *testing.T) {
 
 func TestParseExpressionMul(t *testing.T) {
 	toConvert := "p1*p2"
-	exp := parseExpression(toConvert)
-	res, instructions, _ := convertAstToExpressionList(exp)
+	exp := ParseExpression(toConvert)
+	res, instructions, _ := ConvertAstToExpressionList(exp)
 	if len(instructions) != 1 {
 		t.Errorf("Number of instructions incorrect got %v expected %v", len(instructions), 1)
 	}
@@ -49,8 +49,8 @@ func TestParseExpressionMul(t *testing.T) {
 
 func TestParseExpressionScalar(t *testing.T) {
 	toConvert := "1*p1"
-	exp := parseExpression(toConvert)
-	res, instructions, _ := convertAstToExpressionList(exp)
+	exp := ParseExpression(toConvert)
+	res, instructions, _ := ConvertAstToExpressionList(exp)
 	if len(instructions) != 1 {
 		t.Errorf("Number of instructions incorrect got %v expected %v", len(instructions), 1)
 	}
@@ -70,8 +70,8 @@ func TestParseExpressionScalar(t *testing.T) {
 
 func TestParseExpressionCombined(t *testing.T) {
 	toConvert := "(1*p1+p2)*p3"
-	exp := parseExpression(toConvert)
-	res, instructions, _ := convertAstToExpressionList(exp)
+	exp := ParseExpression(toConvert)
+	res, instructions, _ := ConvertAstToExpressionList(exp)
 	if len(instructions) != 3 {
 		t.Errorf("Number of instructions incorrect got %v expected %v", len(instructions), 3)
 	}
@@ -104,8 +104,8 @@ func TestParseExpressionCombined(t *testing.T) {
 
 func TestParseExpressionBigCombined(t *testing.T) {
 	toConvert := "(1*p1+p2)*p3+(p1*p2+4*p1)"
-	exp := parseExpression(toConvert)
-	_, instructions, _ := convertAstToExpressionList(exp)
+	exp := ParseExpression(toConvert)
+	_, instructions, _ := ConvertAstToExpressionList(exp)
 	if len(instructions) != 7 {
 		t.Errorf("Number of instructions incorrect got %v expected %v", len(instructions), 7)
 	}
