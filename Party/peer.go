@@ -11,15 +11,13 @@ import (
 )
 
 type Peer struct {
-	Number       int
-	cConnections chan net.Conn
-	cPackages    chan *netpack.NetPackage
-	cMessages    chan netpack.Message
-	connections  []ConnectionTuple
-	peerlist     *peerList
-	Progress     chan int
-	config       *config.Config
-	decoderMap   map[*gob.Decoder]*gob.Encoder
+	Number      int
+	cMessages   chan netpack.Message
+	connections []ConnectionTuple
+	peerlist    *peerList
+	Progress    chan int
+	config      *config.Config
+	decoderMap  map[*gob.Decoder]*gob.Encoder
 }
 
 type peerList struct {
@@ -43,8 +41,6 @@ func MkPeer(config *config.Config, messageChannel chan netpack.Message) *Peer {
 	p.Number = int(config.VariableConfig.PartyNr)
 	p.cMessages = messageChannel
 	p.peerlist = mkPeerList()
-	p.cPackages = make(chan *netpack.NetPackage)
-	p.cConnections = make(chan net.Conn)
 	p.decoderMap = make(map[*gob.Decoder]*gob.Encoder)
 	return p
 }
@@ -53,7 +49,6 @@ func (p *Peer) StartPeer() {
 	p.peerlist.lock.Lock()
 	p.peerlist.ipPorts = append(p.peerlist.ipPorts, p.config.VariableConfig.ListenIpPort)
 	p.peerlist.lock.Unlock()
-	go p.receiveFromChannels()
 	//Test on localhost
 	if p.config.VariableConfig.ConnectIpPort != "" {
 		conn, err := net.Dial("tcp", p.config.VariableConfig.ConnectIpPort)
@@ -128,30 +123,17 @@ func (p *Peer) receivePeers(dec *gob.Decoder) {
 	fmt.Printf("Party: %v Peerlist: %v \n", p.Number, p.peerlist.ipPorts)
 }
 
-func (p *Peer) receiveFromChannels() {
-	for {
-		select {
-		case newConnection := <-p.cConnections:
-			encoder := gob.NewEncoder(newConnection)
-			decoder := gob.NewDecoder(newConnection)
-			p.addEntryDecoderMap(decoder, encoder)
-			conTuble := new(ConnectionTuple)
-			conTuble.Connection = encoder
-			p.connections = append(p.connections, *conTuble)
-			fmt.Println("Adding connection")
-			//send peers to the new connections
-			p.sendPeerlist(encoder)
-			go p.handleConnection(decoder)
-		case newPackage := <-p.cPackages:
-			p.processPackage(newPackage)
-		}
-	}
-}
-
-func (p *Peer) processPackage(pack *netpack.NetPackage) {
-	//Message
-	m := pack.Message
-	p.cMessages <- m
+func (p *Peer) addConnection(newConnection net.Conn) {
+	encoder := gob.NewEncoder(newConnection)
+	decoder := gob.NewDecoder(newConnection)
+	p.addEntryDecoderMap(decoder, encoder)
+	conTuble := new(ConnectionTuple)
+	conTuble.Connection = encoder
+	p.connections = append(p.connections, *conTuble)
+	fmt.Println("Adding connection")
+	//send peers to the new connections
+	p.sendPeerlist(encoder)
+	go p.handleConnection(decoder)
 }
 
 // Internal functions
@@ -177,7 +159,8 @@ func (p *Peer) handleConnection(dec *gob.Decoder) {
 			} else if receivedPackage.IpPorts == nil {
 				//If we receive IpPorts we should ignore it, we handle this
 				//Only if we're actually waiting for the peerlist
-				p.cPackages <- receivedPackage
+				m := receivedPackage.Message
+				p.cMessages <- m
 			}
 		}
 	}
@@ -194,7 +177,7 @@ func (p *Peer) addEntryDecoderMap(decoder *gob.Decoder, encoder *gob.Encoder) {
 }
 
 func (p *Peer) connectToPeers() {
-	fmt.Printf("Peerlist at connect to Peers %v", p.peerlist.ipPorts)
+	fmt.Printf("Peerlist at connect to Peers %v\n", p.peerlist.ipPorts)
 	for _, ip := range p.peerlist.ipPorts {
 		//Make sure you don't connect to the initial peer again
 		if ip != p.config.VariableConfig.ConnectIpPort && ip != p.config.VariableConfig.ListenIpPort {
@@ -203,7 +186,7 @@ func (p *Peer) connectToPeers() {
 				fmt.Println("Failed to connect to " + ip)
 				fmt.Println(err)
 			} else {
-				p.cConnections <- conn
+				p.addConnection(conn)
 			}
 		}
 	}
@@ -226,7 +209,7 @@ func (p *Peer) listenForConnections(totalPeers int, listenOnAddress string) {
 			fmt.Println("Failed connection on accept")
 			return
 		}
-		p.cConnections <- conn
+		p.addConnection(conn)
 		i++
 	}
 	//End of phase 1

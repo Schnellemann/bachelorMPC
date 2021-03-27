@@ -53,14 +53,14 @@ func TestConnections(t *testing.T) {
 	}
 	if len(p.connections) != 2 {
 
-		t.Errorf(assertEqualError(len(p.cConnections), 2))
+		t.Errorf(assertEqualError(len(p.connections), 2))
 	}
 	if len(p2.connections) != 2 {
-		t.Errorf(assertEqualError(len(p2.cConnections), 2))
+		t.Errorf(assertEqualError(len(p2.connections), 2))
 		fmt.Printf("P2 connections is: %v", p.connections)
 	}
 	if len(p3.connections) != 2 {
-		t.Errorf(assertEqualError(len(p3.cConnections), 2))
+		t.Errorf(assertEqualError(len(p3.connections), 2))
 	}
 
 }
