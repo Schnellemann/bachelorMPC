@@ -7,7 +7,7 @@ import (
 )
 
 func TestMkProtocol(t *testing.T) {
-	config := &config.ReadConfig("../Config/ConfigFiles/CEPSConfig.json")[0]
+	config := &config.ReadConfig("/Config/ConfigFiles/CEPSConfig.json")[0]
 	field := field.MakeModPrime(11)
 	proc := mkProtocol(config, 2, field)
 
