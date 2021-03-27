@@ -17,16 +17,18 @@ type Ceps struct {
 	shamir         *ShamirSecretSharing
 	cMessages      chan netpack.Message
 	receivedShares map[string]*netpack.Share
+	degree         int
 }
 
 func mkProtocol(config *config.Config, secret int64, field field.Field) *Ceps {
-	proc := new(Ceps)
-	proc.cMessages = make(chan netpack.Message)
-	proc.config = config
-	proc.peer = party.MkPeer(config, proc.cMessages)
-	proc.shamir = makeShamirSecretSharing(secret, field, int(math.Ceil(proc.config.ConstantConfig.NumberOfParties/2)-1))
-	proc.receivedShares = make(map[string]*netpack.Share)
-	return proc
+	prot := new(Ceps)
+	prot.cMessages = make(chan netpack.Message)
+	prot.config = config
+	prot.peer = party.MkPeer(config, prot.cMessages)
+	prot.degree = int(math.Ceil(prot.config.ConstantConfig.NumberOfParties/2) - 1)
+	prot.shamir = makeShamirSecretSharing(secret, field, prot.degree)
+	prot.receivedShares = make(map[string]*netpack.Share)
+	return prot
 }
 
 func (prot *Ceps) run() int {
@@ -75,6 +77,7 @@ func (prot *Ceps) receive(ctx context.Context) {
 		select {
 		case message := <-prot.cMessages:
 			//TODO
+			fmt.Printf(message.Signature)
 
 		case <-ctx.Done():
 			fmt.Println("Protocol received shutdown signal, closing messageChannel!")
@@ -119,7 +122,7 @@ func (prot *Ceps) multiply(instructionNumber int, ins config.Instruction) {
 	prot.waitForShares([]string{ins.Left, ins.Right})
 	//This is not the s0 value, but each party's perception of the value that they will use in the new polynomial
 	secretValue := prot.shamir.field.Multiply(prot.receivedShares[ins.Left].Value, prot.receivedShares[ins.Right].Value)
-	SSS := makeShamirSecretSharing(secretValue, prot.shamir.field, prot.shamir.degree)
+	SSS := makeShamirSecretSharing(secretValue, prot.shamir.field, prot.degree)
 	toSendIdentifier := "m" + strconv.Itoa(instructionNumber) + "," + strconv.Itoa(int(prot.config.VariableConfig.PartyNr))
 	shares := SSS.makeShares(int64(prot.config.ConstantConfig.NumberOfParties), toSendIdentifier)
 
@@ -134,8 +137,7 @@ func (prot *Ceps) multiply(instructionNumber int, ins config.Instruction) {
 	//Find the recombination vector
 
 	//Use lagrange interpolation on received shares, note that degree needs to be changed to numParties-1
-	//value := lagrangeInterpolation()
-	value := int64(0)
+	value, _ := SSS.lagrangeInterpolation(shares, int(prot.config.ConstantConfig.NumberOfParties-1))
 	prot.addResultShare(ins.Result, value)
 }
 

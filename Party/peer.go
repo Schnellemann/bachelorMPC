@@ -70,7 +70,7 @@ func (p *Peer) handleConnection(dec *gob.Decoder) {
 	}
 }
 
-func (p *Peer) sendShares(shareList []netpack.Share) {
+func (p *Peer) SendShares(shareList []netpack.Share) {
 	for i := 0; i < len(shareList); i++ {
 		netPackage := new(netpack.NetPackage)
 		netPackage.Message.Share = shareList[i]

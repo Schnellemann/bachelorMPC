@@ -9,14 +9,12 @@ import (
 )
 
 type ShamirSecretSharing struct {
-	field  fields.Field
-	poly   []int64
-	degree int
+	field fields.Field
+	poly  []int64
 }
 
 func makeShamirSecretSharing(secret int64, fieldImp fields.Field, degree int) *ShamirSecretSharing {
 	SSS := new(ShamirSecretSharing)
-	SSS.degree = degree
 	SSS.field = fieldImp
 	SSS.poly = make([]int64, degree+1)
 	SSS.poly[0] = secret
@@ -27,16 +25,16 @@ func makeShamirSecretSharing(secret int64, fieldImp fields.Field, degree int) *S
 	return SSS
 }
 
-func (s ShamirSecretSharing) lagrangeInterpolation(shares []netpack.Share) (secret int64, err error) {
-	if !(len(shares) > s.degree) {
+func (s ShamirSecretSharing) lagrangeInterpolation(shares []netpack.Share, degree int) (secret int64, err error) {
+	if !(len(shares) > degree) {
 		return int64(0), errors.New("Lagrange: too few shares received")
 	}
 	result := float64(0)
 	//Computation as showed in example in MPC-book page 42
-	for i := 0; i <= s.degree; i++ {
+	for i := 0; i <= degree; i++ {
 		enumerator := float64(shares[i].Value)
 		denominator := float64(1)
-		for j := 0; j <= s.degree; j++ {
+		for j := 0; j <= degree; j++ {
 			if j != i {
 				identifierI := shares[i].Identifier
 				identifierJ := shares[j].Identifier
