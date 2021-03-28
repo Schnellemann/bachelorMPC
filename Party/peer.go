@@ -80,11 +80,10 @@ func (p *Peer) StartPeer(shareChannel chan netpack.Share) {
 
 //Send Methods
 func (p *Peer) SendShares(shareList []netpack.Share) {
-	for i := 0; i < len(shareList); i++ {
+	for _, s := range p.connections {
 		netPackage := new(netpack.NetPackage)
-		netPackage.Share = shareList[i]
-		//This should work because connections are sorted in recieveFromChannels
-		p.write(p.connections[i].Connection, netPackage)
+		netPackage.Share = shareList[s.Number]
+		p.write(s.Connection, netPackage)
 	}
 }
 
@@ -225,6 +224,7 @@ func (p *Peer) listenForConnections(totalPeers int, listenOnAddress string) {
 		i++
 	}
 	//End of phase 1
+	p.sortConnections()
 	p.progress <- 1
 }
 

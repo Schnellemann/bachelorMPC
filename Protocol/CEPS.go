@@ -5,7 +5,6 @@ import (
 	field "MPC/Fields"
 	netpack "MPC/Netpackage"
 	party "MPC/Party"
-	"context"
 	"fmt"
 	"math"
 	"strconv"
@@ -32,13 +31,13 @@ type rShares struct {
 	mu             sync.Mutex
 }
 
-func mkProtocol(config *config.Config, secret int64, field field.Field, peer party.IPeer) *Ceps {
+func mkProtocol(config *config.Config, field field.Field, peer party.IPeer) *Ceps {
 	prot := new(Ceps)
 	prot.cMessages = make(chan netpack.Share)
 	prot.config = config
 	prot.peer = peer
 	prot.degree = int(math.Ceil(prot.config.ConstantConfig.NumberOfParties/2) - 1)
-	prot.shamir = makeShamirSecretSharing(secret, field, prot.degree)
+	prot.shamir = makeShamirSecretSharing(config.VariableConfig.Secret, field, prot.degree)
 	prot.rShares = rShares{receivedShares: make(map[string]*netpack.Share)}
 	return prot
 }
@@ -50,13 +49,12 @@ func (prot *Ceps) run() int64 {
 	//Start peer
 	prot.peer.StartPeer(prot.cMessages)
 
-	//wait group for start peer
+	//wait for network
 	<-partyProgress
-	//Start receiving messages from the network
-	ctx, cancelFunc := context.WithCancel(context.Background())
-	defer cancelFunc()
 
-	go prot.receive(ctx)
+	//Start receiving messages from the network
+
+	go prot.receive()
 	//Convert string expression into instruction list
 	exp := prot.config.ConstantConfig.Expression
 	astExp := config.ParseExpression(exp)
@@ -66,6 +64,10 @@ func (prot *Ceps) run() int64 {
 		println(err)
 		return 0
 	}
+	//Send input shares
+	toSendIdentifier := "p" + strconv.Itoa(int(prot.config.VariableConfig.PartyNr))
+	shares := prot.shamir.makeShares(int64(prot.config.ConstantConfig.NumberOfParties), toSendIdentifier)
+	prot.handleShare(shares)
 
 	//Do instructions
 	for i, ins := range instructionList {
@@ -81,30 +83,20 @@ func (prot *Ceps) run() int64 {
 
 	//output reconstruction
 	res := prot.outputReconstruction(finalResult)
-
-	fmt.Printf("Party %v got %v as the final result\n", int(prot.config.VariableConfig.PartyNr), res)
 	return res
 }
 
-func (prot *Ceps) receive(ctx context.Context) {
+func (prot *Ceps) receive() {
 	for {
-		select {
-		case message := <-prot.cMessages:
-			if string(message.Identifier[0]) == "o" {
-				prot.fShares.mu.Lock()
-				prot.fShares.finalShares = append(prot.fShares.finalShares, message)
-				prot.fShares.mu.Unlock()
-			} else {
-				prot.rShares.mu.Lock()
-				prot.rShares.receivedShares[message.Identifier] = &message
-				prot.rShares.mu.Unlock()
-			}
-
-		case <-ctx.Done():
-			fmt.Println("Protocol received shutdown signal, closing messageChannel!")
-			close(prot.cMessages)
-			fmt.Println("Protocol closed messageChannel")
-			return
+		message := <-prot.cMessages
+		if string(message.Identifier[0]) == "o" {
+			prot.fShares.mu.Lock()
+			prot.fShares.finalShares = append(prot.fShares.finalShares, message)
+			prot.fShares.mu.Unlock()
+		} else {
+			prot.rShares.mu.Lock()
+			prot.rShares.receivedShares[message.Identifier] = &message
+			prot.rShares.mu.Unlock()
 		}
 
 	}
@@ -137,6 +129,14 @@ func (prot *Ceps) addResultShare(insResult string, value int64) {
 	prot.rShares.mu.Unlock()
 }
 
+func (prot *Ceps) handleShare(shares []netpack.Share) {
+	prot.peer.SendShares(shares)
+	prot.rShares.mu.Lock()
+	myShare := shares[int(prot.config.VariableConfig.PartyNr)-1]
+	prot.rShares.receivedShares[myShare.Identifier] = &myShare
+	prot.rShares.mu.Unlock()
+}
+
 func (prot *Ceps) add(ins config.Instruction) {
 	prot.waitForShares([]string{ins.Left, ins.Right})
 	prot.rShares.mu.Lock()
@@ -158,8 +158,7 @@ func (prot *Ceps) multiply(instructionNumber int, ins config.Instruction) {
 	SSS := makeShamirSecretSharing(secretValue, prot.shamir.field, prot.degree)
 	toSendIdentifier := "m" + strconv.Itoa(instructionNumber) + "," + strconv.Itoa(int(prot.config.VariableConfig.PartyNr))
 	shares := SSS.makeShares(int64(prot.config.ConstantConfig.NumberOfParties), toSendIdentifier)
-
-	prot.peer.SendShares(shares)
+	prot.handleShare(shares)
 	var multiplicationIdentifiers []string
 	for i := 0; i < int(prot.config.ConstantConfig.NumberOfParties); i++ {
 		multiplicationIdentifiers = append(multiplicationIdentifiers, ("m" + strconv.Itoa(instructionNumber) + "," + strconv.Itoa(i)))
