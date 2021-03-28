@@ -64,6 +64,7 @@ func (p *Peer) StartPeer(shareChannel chan netpack.Share) {
 			//Make the decoder such that we can decode the messages
 			dec := gob.NewDecoder(conn)
 			enc := gob.NewEncoder(conn)
+			//add first connection to map
 			conTuble := new(ConnectionTuple)
 			conTuble.Connection = enc
 			conTuble.Number = p.getPartyNrFromIp(p.config.VariableConfig.ConnectIpPort)
@@ -80,9 +81,10 @@ func (p *Peer) StartPeer(shareChannel chan netpack.Share) {
 
 //Send Methods
 func (p *Peer) SendShares(shareList []netpack.Share) {
+	fmt.Printf("I am party: %v and my connections are: %v \n", p.Number, p.connections)
 	for _, s := range p.connections {
 		netPackage := new(netpack.NetPackage)
-		netPackage.Share = shareList[s.Number]
+		netPackage.Share = shareList[s.Number-1]
 		p.write(s.Connection, netPackage)
 	}
 }
@@ -166,6 +168,7 @@ func (p *Peer) handleConnection(dec *gob.Decoder) {
 				p.peerlist.ipPorts = append(p.peerlist.ipPorts, receivedPackage.Peer)
 				p.peerlist.lock.Unlock()
 				p.decoderMap[dec].Number = p.getPartyNrFromIp(receivedPackage.Peer)
+				p.checkReady()
 
 			} else if receivedPackage.IpPorts == nil {
 				//If we receive IpPorts we should ignore it, we handle this
@@ -198,6 +201,7 @@ func (p *Peer) connectToPeers() {
 				fmt.Println(err)
 			} else {
 				p.addConnection(conn, ip)
+				p.checkReady()
 			}
 		}
 	}
@@ -223,11 +227,31 @@ func (p *Peer) listenForConnections(totalPeers int, listenOnAddress string) {
 		p.addConnection(conn, "")
 		i++
 	}
-	//End of phase 1
-	p.sortConnections()
-	p.progress <- 1
 }
 
 func (p *Peer) getPartyNrFromIp(ip string) int {
-	return aux.SliceIndex(int(p.config.ConstantConfig.NumberOfParties-1), func(i int) bool { return p.config.ConstantConfig.Ipports[i] == ip })
+	limit := int(p.config.ConstantConfig.NumberOfParties)
+	pred := func(i int) bool { return p.config.ConstantConfig.Ipports[i] == ip }
+	index := aux.SliceIndex(limit, pred)
+	if index == -1 {
+		println("Error in finding party number from ip")
+	}
+	return index + 1
+}
+
+func (p *Peer) checkReady() {
+	if len(p.connections) == int(p.config.ConstantConfig.NumberOfParties) {
+		ready := true
+		for _, c := range p.connections {
+			if c.Number == 0 {
+				ready = false
+			}
+		}
+		if ready {
+			//End of phase 1
+			p.sortConnections()
+			p.progress <- 1
+		}
+	}
+
 }

@@ -89,6 +89,7 @@ func (prot *Ceps) run() int64 {
 func (prot *Ceps) receive() {
 	for {
 		message := <-prot.cMessages
+		fmt.Printf("Party %v got share {%v,%v}\n", prot.config.VariableConfig.PartyNr, message.Identifier, message.Value)
 		if string(message.Identifier[0]) == "o" {
 			prot.fShares.mu.Lock()
 			prot.fShares.finalShares = append(prot.fShares.finalShares, message)
@@ -130,6 +131,7 @@ func (prot *Ceps) addResultShare(insResult string, value int64) {
 }
 
 func (prot *Ceps) handleShare(shares []netpack.Share) {
+	fmt.Printf("Party %v send %v\n", prot.config.VariableConfig.PartyNr, shares)
 	prot.peer.SendShares(shares)
 	prot.rShares.mu.Lock()
 	myShare := shares[int(prot.config.VariableConfig.PartyNr)-1]
@@ -177,7 +179,7 @@ func (prot *Ceps) scalar(ins config.Instruction) {
 	prot.waitForShares([]string{ins.Right})
 	scalar, err := strconv.Atoi(ins.Left)
 	if err != nil {
-		fmt.Printf("Received non-integer as scalar in instruction")
+		println("Received non-integer as scalar in instruction")
 		return
 	}
 	prot.rShares.mu.Lock()

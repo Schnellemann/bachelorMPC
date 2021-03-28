@@ -86,6 +86,16 @@ func TestSendShares(t *testing.T) {
 	p3 := MkPeer(conf3)
 	p4 := MkPeer(conf4)
 	p5 := MkPeer(conf5)
+	progress1 := make(chan int)
+	progress2 := make(chan int)
+	progress3 := make(chan int)
+	progress4 := make(chan int)
+	progress5 := make(chan int)
+	p.SetProgress(progress1)
+	p2.SetProgress(progress2)
+	p3.SetProgress(progress3)
+	p4.SetProgress(progress4)
+	p5.SetProgress(progress5)
 	/*
 		Make channels for message
 	*/
@@ -113,7 +123,11 @@ func TestSendShares(t *testing.T) {
 	fmt.Println("Started peer 5")
 	p5.StartPeer(pChan5)
 	time.Sleep(1 * time.Second)
-
+	<-progress1
+	<-progress2
+	<-progress3
+	<-progress4
+	<-progress5
 	shares := []netpackage.Share{{1, "share1"}, {2, "share2"}, {3, "share3"}, {4, "share4"}, {5, "share5"}}
 
 	p.SendShares(shares)
