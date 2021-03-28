@@ -2,6 +2,7 @@ package party
 
 import (
 	config "MPC/Config"
+	netpackage "MPC/Netpackage"
 	"fmt"
 	"reflect"
 	"testing"
@@ -15,10 +16,20 @@ func assertEqualError(received interface{}, expected interface{}) string {
 }
 
 func TestConnections(t *testing.T) {
+
+	/*
+		Configs
+	*/
+	constantConfig := config.ConstantConfig{"", 3, []string{"127.0.1.1:40002", "127.0.1.1:60716", "127.0.1.1:60817"}}
+	variableConfig1 := config.VariableConfig{"127.0.1.1:40002", "", 1, 1}
+	variableConfig2 := config.VariableConfig{"127.0.1.1:60716", "127.0.1.1:40002", 2, 2}
+	variableConfig3 := config.VariableConfig{"127.0.1.1:60817", "127.0.1.1:60716", 3, 3}
 	/*
 		Make the peers
 	*/
-	configs := config.ReadConfig(filepath)
+	configs := []config.Config{{VariableConfig: variableConfig1, ConstantConfig: constantConfig},
+		{VariableConfig: variableConfig2, ConstantConfig: constantConfig},
+		{VariableConfig: variableConfig3, ConstantConfig: constantConfig}}
 	conf := &configs[0]
 	conf2 := &configs[1]
 	conf3 := &configs[2]
@@ -61,6 +72,68 @@ func TestConnections(t *testing.T) {
 		t.Errorf(assertEqualError(len(p3.connections), 2))
 	}
 
+}
+
+func TestSendShares(t *testing.T) {
+	configs := config.ReadConfig(filepath)
+	conf := &configs[0]
+	conf2 := &configs[1]
+	conf3 := &configs[2]
+	conf4 := &configs[3]
+	conf5 := &configs[4]
+	p := MkPeer(conf)
+	p2 := MkPeer(conf2)
+	p3 := MkPeer(conf3)
+	p4 := MkPeer(conf4)
+	p5 := MkPeer(conf5)
+	/*
+		Make channels for message
+	*/
+	pChan1 := make(chan netpackage.Share)
+	pChan2 := make(chan netpackage.Share)
+	pChan3 := make(chan netpackage.Share)
+	pChan4 := make(chan netpackage.Share)
+	pChan5 := make(chan netpackage.Share)
+
+	/*
+		Connect them
+	*/
+	fmt.Println("Started peer 1")
+	p.StartPeer(pChan1)
+	time.Sleep(1000 * time.Millisecond)
+	fmt.Println("Started peer 2")
+	p2.StartPeer(pChan2)
+	time.Sleep(1 * time.Second)
+	fmt.Println("Started peer 3")
+	p3.StartPeer(pChan3)
+	time.Sleep(1 * time.Second)
+	fmt.Println("Started peer 4")
+	p4.StartPeer(pChan4)
+	time.Sleep(1 * time.Second)
+	fmt.Println("Started peer 5")
+	p5.StartPeer(pChan5)
+	time.Sleep(1 * time.Second)
+
+	shares := []netpackage.Share{{1, "share1"}, {2, "share2"}, {3, "share3"}, {4, "share4"}, {5, "share5"}}
+
+	p.SendShares(shares)
+	share2Res := <-pChan2
+	share3Res := <-pChan3
+	share4Res := <-pChan4
+	share5Res := <-pChan5
+
+	if share2Res.Value != 2 && share2Res.Identifier != "share2" {
+		t.Errorf("Wrong share recieved at peer2, should have value: %v, got: %v", 2, share2Res.Value)
+	}
+	if share3Res.Value != 3 && share3Res.Identifier != "share3" {
+		t.Errorf("Wrong share recieved at peer3, should have value: %v, got: %v", 3, share3Res.Value)
+	}
+	if share3Res.Value != 4 && share4Res.Identifier != "share4" {
+		t.Errorf("Wrong share recieved at peer3, should have value: %v, got: %v", 4, share4Res.Value)
+	}
+	if share3Res.Value != 5 && share5Res.Identifier != "share5" {
+		t.Errorf("Wrong share recieved at peer3, should have value: %v, got: %v", 5, share5Res.Value)
+	}
 }
 
 func contains(s []string, e string) bool {
