@@ -2,6 +2,7 @@ package protocol
 
 import (
 	fields "MPC/Fields"
+	netpack "MPC/Netpackage"
 	"strconv"
 	"testing"
 )
@@ -46,13 +47,24 @@ func TestShareMaking(t *testing.T) {
 }
 
 func TestLagrangeInterpolation(t *testing.T) {
-	secret := int64(42)
-	SSS := makeShamirSecretSharing(secret, fields.MakeModPrime(43), 4)
+	secret := int64(28)
+	SSS := makeShamirSecretSharing(secret, fields.MakeModPrime(43), 2)
 	shares := SSS.makeShares(5, "p1")
 	for i := 0; i < 5; i++ {
 		shares[i].Identifier = "p" + strconv.Itoa(i+1)
 	}
-	secretLagrange, _ := SSS.lagrangeInterpolation(shares, 4)
+	secretLagrange, _ := SSS.lagrangeInterpolation(shares, 2)
+	if secretLagrange != secret {
+		t.Errorf("Wrong secret, got %v expected %v", secretLagrange, secret)
+	}
+}
+
+func TestLagrangeInterpolation2(t *testing.T) {
+	secret := int64(11)
+	SSS := makeShamirSecretSharing(secret, fields.MakeModPrime(13), 1)
+	SSS.poly = []int64{11, 8}
+	shares := []netpack.Share{{Value: 9, Identifier: "o3"}, {Value: 6, Identifier: "o1"}}
+	secretLagrange, _ := SSS.lagrangeInterpolation(shares, 1)
 	if secretLagrange != secret {
 		t.Errorf("Wrong secret, got %v expected %v", secretLagrange, secret)
 	}

@@ -4,6 +4,7 @@ import (
 	fields "MPC/Fields"
 	netpack "MPC/Netpackage"
 	"errors"
+	"fmt"
 	"math"
 	"strconv"
 )
@@ -22,6 +23,7 @@ func makeShamirSecretSharing(secret int64, fieldImp fields.Field, degree int) *S
 	for i := 1; i <= degree; i++ {
 		SSS.poly[i] = SSS.field.GetRandom()
 	}
+	fmt.Printf("Poly: %v\n", SSS.poly)
 	return SSS
 }
 
@@ -38,8 +40,11 @@ func (s ShamirSecretSharing) lagrangeInterpolation(shares []netpack.Share, degre
 			if j != i {
 				identifierI := shares[i].Identifier
 				identifierJ := shares[j].Identifier
-				numberI, _ := strconv.Atoi(string(identifierI[1]))
-				numberJ, _ := strconv.Atoi(string(identifierJ[1]))
+				numberI, err := strconv.Atoi(string(identifierI[1]))
+				numberJ, err2 := strconv.Atoi(string(identifierJ[1]))
+				if err != nil || err2 != nil {
+					fmt.Printf("String conversion error in lagrange, %v or %v\n", err, err2)
+				}
 
 				enumerator = enumerator * float64(-numberJ)
 				denominator = denominator * float64(numberI-numberJ)

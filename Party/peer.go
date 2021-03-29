@@ -12,18 +12,24 @@ import (
 )
 
 type Peer struct {
-	Number      int
-	cShare      chan netpack.Share
-	connections []ConnectionTuple
-	peerlist    *peerList
-	progress    chan int
-	config      *config.Config
-	decoderMap  map[*gob.Decoder]*ConnectionTuple
+	Number       int
+	cShare       chan netpack.Share
+	connections  connection
+	peerlist     *peerList
+	wg           *sync.WaitGroup
+	config       *config.Config
+	decoderMap   map[*gob.Decoder]*ConnectionTuple
+	hasSentReady bool
 }
 
 type peerList struct {
 	ipPorts []string
 	lock    sync.Mutex
+}
+
+type connection struct {
+	c    []*ConnectionTuple
+	lock sync.Mutex
 }
 
 type ConnectionTuple struct {
@@ -36,10 +42,6 @@ func mkPeerList() *peerList {
 	return pl
 }
 
-func (p *Peer) SetProgress(progress chan int) {
-	p.progress = progress
-}
-
 func MkPeer(config *config.Config) *Peer {
 	p := new(Peer)
 	p.config = config
@@ -49,8 +51,9 @@ func MkPeer(config *config.Config) *Peer {
 	return p
 }
 
-func (p *Peer) StartPeer(shareChannel chan netpack.Share) {
+func (p *Peer) StartPeer(shareChannel chan netpack.Share, wg *sync.WaitGroup) {
 	p.cShare = shareChannel
+	p.wg = wg
 	p.peerlist.lock.Lock()
 	p.peerlist.ipPorts = append(p.peerlist.ipPorts, p.config.VariableConfig.ListenIpPort)
 	p.peerlist.lock.Unlock()
@@ -69,7 +72,10 @@ func (p *Peer) StartPeer(shareChannel chan netpack.Share) {
 			conTuble.Connection = enc
 			conTuble.Number = p.getPartyNrFromIp(p.config.VariableConfig.ConnectIpPort)
 			p.addEntryDecoderMap(dec, conTuble)
-			p.connections = append(p.connections, *conTuble)
+			p.connections.lock.Lock()
+			p.connections.c = append(p.connections.c, conTuble)
+			p.connections.lock.Unlock()
+			p.checkReady()
 			p.receivePeers(dec)
 			p.connectToPeers()
 			go p.handleConnection(dec)
@@ -82,11 +88,13 @@ func (p *Peer) StartPeer(shareChannel chan netpack.Share) {
 //Send Methods
 func (p *Peer) SendShares(shareList []netpack.Share) {
 	fmt.Printf("I am party: %v and my connections are: %v \n", p.Number, p.connections)
-	for _, s := range p.connections {
+	p.connections.lock.Lock()
+	for _, s := range p.connections.c {
 		netPackage := new(netpack.NetPackage)
 		netPackage.Share = shareList[s.Number-1]
 		p.write(s.Connection, netPackage)
 	}
+	p.connections.lock.Unlock()
 }
 
 func (p *Peer) sendPeerlist(encoder *gob.Encoder) {
@@ -98,9 +106,11 @@ func (p *Peer) sendPeerlist(encoder *gob.Encoder) {
 func (p *Peer) broadcastPeer(ipPort string) {
 	newPeerPackage := new(netpack.NetPackage)
 	newPeerPackage.Peer = ipPort
-	for _, c := range p.connections {
+	p.connections.lock.Lock()
+	for _, c := range p.connections.c {
 		p.write(c.Connection, newPeerPackage)
 	}
+	p.connections.lock.Unlock()
 }
 
 func (p *Peer) write(encoder *gob.Encoder, pack *netpack.NetPackage) {
@@ -115,9 +125,11 @@ func (p *Peer) write(encoder *gob.Encoder, pack *netpack.NetPackage) {
 func (p *Peer) SendFinal(share netpack.Share) {
 	pack := new(netpack.NetPackage)
 	pack.Share = share
-	for _, conTup := range p.connections {
+	p.connections.lock.Lock()
+	for _, conTup := range p.connections.c {
 		p.write(conTup.Connection, pack)
 	}
+	p.connections.lock.Unlock()
 }
 
 // Recieve Methods
@@ -142,7 +154,10 @@ func (p *Peer) addConnection(newConnection net.Conn, ip string) {
 	}
 	conTuble.Connection = encoder
 	p.addEntryDecoderMap(decoder, conTuble)
-	p.connections = append(p.connections, *conTuble)
+	p.connections.lock.Lock()
+	p.connections.c = append(p.connections.c, conTuble)
+	p.connections.lock.Unlock()
+	p.checkReady()
 	//send peers to the new connections
 	p.sendPeerlist(encoder)
 	go p.handleConnection(decoder)
@@ -181,9 +196,11 @@ func (p *Peer) handleConnection(dec *gob.Decoder) {
 }
 
 func (p *Peer) sortConnections() {
+	p.connections.lock.Lock()
 	sort.SliceStable(p.connections, func(i, j int) bool {
-		return p.connections[i].Number < p.connections[j].Number
+		return p.connections.c[i].Number < p.connections.c[j].Number
 	})
+	p.connections.lock.Unlock()
 }
 
 func (p *Peer) addEntryDecoderMap(decoder *gob.Decoder, conTuble *ConnectionTuple) {
@@ -201,10 +218,10 @@ func (p *Peer) connectToPeers() {
 				fmt.Println(err)
 			} else {
 				p.addConnection(conn, ip)
-				p.checkReady()
 			}
 		}
 	}
+	p.checkReady()
 }
 
 func (p *Peer) listenForConnections(totalPeers int, listenOnAddress string) {
@@ -216,7 +233,9 @@ func (p *Peer) listenForConnections(totalPeers int, listenOnAddress string) {
 	defer li.Close()
 	fmt.Println("Other peers can connect to me on the following ip:port")
 	fmt.Println("Address " + ": " + p.config.VariableConfig.ListenIpPort)
-	i := len(p.connections) + 1
+	p.connections.lock.Lock()
+	i := len(p.connections.c) + 1
+	p.connections.lock.Unlock()
 	for i < int(p.config.ConstantConfig.NumberOfParties) {
 		conn, err := li.Accept()
 		//TODO update Connectionstuple with encoder and number of the connected peer
@@ -240,18 +259,25 @@ func (p *Peer) getPartyNrFromIp(ip string) int {
 }
 
 func (p *Peer) checkReady() {
-	if len(p.connections) == int(p.config.ConstantConfig.NumberOfParties) {
-		ready := true
-		for _, c := range p.connections {
+
+	p.connections.lock.Lock()
+	defer p.connections.lock.Unlock()
+	if p.hasSentReady {
+		return
+	}
+	ready := false
+	if len(p.connections.c) == int(p.config.ConstantConfig.NumberOfParties)-1 {
+		ready = true
+		for _, c := range p.connections.c {
 			if c.Number == 0 {
 				ready = false
 			}
 		}
-		if ready {
-			//End of phase 1
-			p.sortConnections()
-			p.progress <- 1
-		}
+	}
+	if ready {
+		//End of phase 1
+		p.hasSentReady = true
+		p.wg.Done()
 	}
 
 }

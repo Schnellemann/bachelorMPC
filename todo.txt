@@ -34,7 +34,7 @@ Output reconstruction
 Identify parties according to config.
 - Update connection list with a number
 
-
+Fix p10 in lagrange
 
 
 #FlipTheTable -> Make sure that connections actually get send the correct shares in peer

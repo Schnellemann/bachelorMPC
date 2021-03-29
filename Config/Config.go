@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 )
 
 type Config struct {
@@ -56,4 +57,30 @@ func ReadConfig(filepath string) (configList []Config) {
 		configList = append(configList, *config)
 	}
 	return
+}
+
+func MakeConfigs(ip string, expression string, secrets []int) []*Config {
+	var configList []*Config
+	var listenIpPorts []string
+	var connectIpPorts []string
+	for i := 0; i < len(secrets); i++ {
+		ListenPort := 40000 + i*10
+		listenIpPorts = append(listenIpPorts, (ip + ":" + strconv.Itoa(ListenPort)))
+		var connectToIpPort string
+		if i == 0 {
+			connectToIpPort = ""
+		} else {
+			connectToIpPort = (ip + ":" + strconv.Itoa(40000+(i-1)*10))
+		}
+		connectIpPorts = append(connectIpPorts, connectToIpPort)
+	}
+
+	for i, s := range secrets {
+
+		vconfig := VariableConfig{PartyNr: float64(i + 1), Secret: int64(s), ListenIpPort: listenIpPorts[i], ConnectIpPort: connectIpPorts[i]}
+		cconfig := ConstantConfig{Expression: expression, NumberOfParties: float64(len(secrets)), Ipports: listenIpPorts}
+		config := Config{VariableConfig: vconfig, ConstantConfig: cconfig}
+		configList = append(configList, &config)
+	}
+	return configList
 }

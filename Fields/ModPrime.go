@@ -46,7 +46,7 @@ func (mp ModPrime) Pow(a int64, b int64) int64 {
 func (mp ModPrime) GetRandom() int64 {
 	bigP := big.NewInt(mp.p)
 	randomNumber, _ := rand.Int(rand.Reader, bigP)
-	return randomNumber.Int64()
+	return mp.Convert(randomNumber.Int64())
 }
 
 func (mp ModPrime) Convert(a int64) int64 {

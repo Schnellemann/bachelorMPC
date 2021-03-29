@@ -43,14 +43,13 @@ func mkProtocol(config *config.Config, field field.Field, peer party.IPeer) *Cep
 }
 
 func (prot *Ceps) run() int64 {
-
-	partyProgress := make(chan int)
-	prot.peer.SetProgress(partyProgress)
+	var wg sync.WaitGroup
 	//Start peer
-	prot.peer.StartPeer(prot.cMessages)
+	wg.Add(1)
+	prot.peer.StartPeer(prot.cMessages, &wg)
 
 	//wait for network
-	<-partyProgress
+	wg.Wait()
 
 	//Start receiving messages from the network
 
@@ -200,6 +199,7 @@ func (prot *Ceps) outputReconstruction(finalResult string) int64 {
 	prot.fShares.finalShares = append(prot.fShares.finalShares, *resultShare)
 	prot.fShares.mu.Unlock()
 	shares := prot.waitForFinalShares()
+	fmt.Printf("Party %v is calling lagrange with degree: %v, and shares: %v\n", prot.config.VariableConfig.PartyNr, prot.degree, shares)
 	result, err := prot.shamir.lagrangeInterpolation(shares, prot.degree)
 	if err != nil {
 		println(err)
