@@ -161,7 +161,7 @@ func (prot *Ceps) multiply(instructionNumber int, ins config.Instruction) {
 	shares := SSS.makeShares(int64(prot.config.ConstantConfig.NumberOfParties), toSendIdentifier)
 	prot.handleShare(shares)
 	var multiplicationIdentifiers []string
-	for i := 0; i < int(prot.config.ConstantConfig.NumberOfParties); i++ {
+	for i := 1; i <= int(prot.config.ConstantConfig.NumberOfParties); i++ {
 		multiplicationIdentifiers = append(multiplicationIdentifiers, ("m" + strconv.Itoa(instructionNumber) + "," + strconv.Itoa(i)))
 	}
 	prot.waitForShares(multiplicationIdentifiers)
