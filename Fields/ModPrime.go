@@ -18,7 +18,7 @@ func MakeModPrime(prime int64) *ModPrime {
 
 func (mp ModPrime) Multiply(a int64, b int64) int64 {
 	result := (a * b) % mp.p
-	return result
+	return mp.Convert(result)
 }
 
 func (mp ModPrime) Add(a int64, b int64) int64 {
@@ -29,6 +29,26 @@ func (mp ModPrime) Add(a int64, b int64) int64 {
 func (mp ModPrime) Minus(a int64, b int64) int64 {
 	result := (a - b) % mp.p
 	return result
+}
+
+func extendedGCD(a int64, b int64) (gcd int64, x int64, y int64) {
+	if a == 0 {
+		return b, 0, 1
+	}
+
+	gcd, x1, y1 := extendedGCD(b%a, a)
+
+	x = y1 - (b/a)*x1
+	y = x1
+
+	return gcd, x, y
+
+}
+
+func (mp ModPrime) Divide(a int64, b int64) int64 {
+	//use extended euclidean algorithm to find gcd of b and p
+	_, u, _ := extendedGCD(b, mp.p)
+	return mp.Multiply(a, u)
 }
 
 func (mp ModPrime) Zero() int64 {

@@ -5,7 +5,6 @@ import (
 	netpack "MPC/Netpackage"
 	"errors"
 	"fmt"
-	"math"
 	"strconv"
 )
 
@@ -31,11 +30,11 @@ func (s ShamirSecretSharing) lagrangeInterpolation(shares []netpack.Share, degre
 	if !(len(shares) > degree) {
 		return int64(0), errors.New("Lagrange: too few shares received")
 	}
-	result := float64(0)
+	result := int64(0)
 	//Computation as showed in example in MPC-book page 42
 	for i := 0; i <= degree; i++ {
-		enumerator := float64(shares[i].Value)
-		denominator := float64(1)
+		enumerator := shares[i].Value
+		denominator := int64(1)
 		for j := 0; j <= degree; j++ {
 			if j != i {
 				identifierI := shares[i].Identifier
@@ -46,13 +45,13 @@ func (s ShamirSecretSharing) lagrangeInterpolation(shares []netpack.Share, degre
 					fmt.Printf("String conversion error in lagrange, %v or %v\n", err, err2)
 				}
 
-				enumerator = enumerator * float64(-numberJ)
-				denominator = denominator * float64(numberI-numberJ)
+				enumerator = s.field.Multiply(enumerator, s.field.Neg(int64(numberJ)))
+				denominator = s.field.Multiply(denominator, (s.field.Minus(int64(numberI), int64(numberJ))))
 			}
 		}
-		result += enumerator / denominator
+		result = s.field.Add(result, s.field.Divide(enumerator, denominator))
 	}
-	return s.field.Convert((int64(math.Round(result)))), nil
+	return result, nil
 }
 
 func (s ShamirSecretSharing) makeShares(numberOfParties int64, identifier string) (shares []netpack.Share) {

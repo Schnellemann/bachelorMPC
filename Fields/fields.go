@@ -9,4 +9,5 @@ type Field interface {
 	GetRandom() int64
 	Neg(int64) int64
 	Convert(int64) int64
+	Divide(int64, int64) int64
 }

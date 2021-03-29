@@ -116,7 +116,23 @@ func TestScalar(t *testing.T) {
 }
 
 func TestMultiply(t *testing.T) {
-
+	configs := config.MakeConfigs(ip, "p2*p3", []int{4, 7, 3, 2, 1})
+	peerlist := getXPeers(configs)
+	var channels []chan int64
+	for i, c := range configs {
+		channel := make(chan int64)
+		channels = append(channels, channel)
+		//Make protocol
+		prot := mkProtocol(c, field.MakeModPrime(13), peerlist[i])
+		go prot.goProt(channel)
+		time.Sleep(200 * time.Millisecond)
+	}
+	for i, c := range channels {
+		result := <-c
+		if result != 8 {
+			t.Errorf("Multiply does not work correctly peer %v expected %v but got %v", i+1, 8, result)
+		}
+	}
 }
 
 func TestCombined(t *testing.T) {
