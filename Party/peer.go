@@ -87,7 +87,6 @@ func (p *Peer) StartPeer(shareChannel chan netpack.Share, wg *sync.WaitGroup) {
 
 //Send Methods
 func (p *Peer) SendShares(shareList []netpack.Share) {
-	fmt.Printf("I am party: %v and my connections are: %v \n", p.Number, p.connections)
 	p.connections.lock.Lock()
 	for _, s := range p.connections.c {
 		netPackage := new(netpack.NetPackage)

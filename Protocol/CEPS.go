@@ -181,12 +181,15 @@ func (prot *Ceps) multiply(instructionNumber int, ins config.Instruction) {
 		multiplicationIdentifiers = append(multiplicationIdentifiers, netpack.ShareIdentifier{Ins: "m" + strconv.Itoa(instructionNumber), PartyNr: i})
 	}
 	prot.waitForShares(multiplicationIdentifiers)
-	//Now we can actually get our value
 
-	//Find the recombination vector
+	var sharesForLagrange []netpack.Share
+	for _, i := range multiplicationIdentifiers {
+		sharesForLagrange = append(sharesForLagrange, *prot.rShares.receivedShares[i])
+	}
 
 	//Use lagrange interpolation on received shares, note that degree needs to be changed to numParties-1
-	value, _ := SSS.lagrangeInterpolation(shares, int(prot.config.ConstantConfig.NumberOfParties-1))
+	fmt.Printf("In multiply party %v is calling lagrange with degree: %v, and shares: %v\n", prot.config.VariableConfig.PartyNr, int(prot.config.ConstantConfig.NumberOfParties-1), sharesForLagrange)
+	value, _ := SSS.lagrangeInterpolation(sharesForLagrange, int(prot.config.ConstantConfig.NumberOfParties-1))
 	prot.addResultShare(ins.Result, value)
 }
 
