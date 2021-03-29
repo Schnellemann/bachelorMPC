@@ -60,7 +60,7 @@ func (prot *Ceps) run() int64 {
 	finalResult, instructionList, err := config.ConvertAstToExpressionList(astExp)
 	if err != nil {
 		//TODO maybe shut down peer?
-		println(err)
+		println(err.Error())
 		return 0
 	}
 	//Send input shares

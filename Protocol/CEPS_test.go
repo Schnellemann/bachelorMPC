@@ -88,5 +88,22 @@ func TestMultiply(t *testing.T) {
 }
 
 func TestCombined(t *testing.T) {
-
+	//19+12*4+2*40 mod 43 = 18
+	configs := config.MakeConfigs(ip, "p1+p2*p4+2*p3", []int{19, 12, 40, 4})
+	peerlist := getXPeers(configs)
+	var channels []chan int64
+	for i, c := range configs {
+		channel := make(chan int64)
+		channels = append(channels, channel)
+		//Make protocol
+		prot := mkProtocol(c, field.MakeModPrime(43), peerlist[i])
+		go prot.goProt(channel)
+		time.Sleep(200 * time.Millisecond)
+	}
+	for i, c := range channels {
+		result := <-c
+		if result != 18 {
+			t.Errorf("Combined does not work correctly peer %v expected %v but got %v", i+1, 18, result)
+		}
+	}
 }
