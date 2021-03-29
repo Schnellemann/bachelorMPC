@@ -40,8 +40,8 @@ func (s ShamirSecretSharing) lagrangeInterpolation(shares []netpack.Share, degre
 			if j != i {
 				identifierI := shares[i].Identifier
 				identifierJ := shares[j].Identifier
-				numberI, err := strconv.Atoi(string(identifierI[1]))
-				numberJ, err2 := strconv.Atoi(string(identifierJ[1]))
+				numberI, err := strconv.Atoi(string(identifierI[1:]))
+				numberJ, err2 := strconv.Atoi(string(identifierJ[1:]))
 				if err != nil || err2 != nil {
 					fmt.Printf("String conversion error in lagrange, %v or %v\n", err, err2)
 				}
@@ -58,7 +58,6 @@ func (s ShamirSecretSharing) lagrangeInterpolation(shares []netpack.Share, degre
 func (s ShamirSecretSharing) makeShares(numberOfParties int64, identifier string) (shares []netpack.Share) {
 	for i := 1; i <= int(numberOfParties); i++ {
 		share := new(netpack.Share)
-		//TODO this is wrong should be my party num always
 		share.Identifier = identifier
 		for j, v := range s.poly {
 			share.Value = s.field.Add(share.Value, s.field.Multiply(v, s.field.Pow(int64(i), int64(j))))
