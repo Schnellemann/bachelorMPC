@@ -68,7 +68,7 @@ func TestScalar(t *testing.T) {
 }
 
 func TestMultiply(t *testing.T) {
-	configs := config.MakeConfigs(ip, "p2*p3", []int{4, 7, 3})
+	configs := config.MakeConfigs(ip, "p2*p3", []int{11, 4, 9, 2, 5, 7, 5, 3, 6, 11})
 	peerlist := getXPeers(configs)
 	var channels []chan int64
 	for i, c := range configs {
@@ -81,8 +81,8 @@ func TestMultiply(t *testing.T) {
 	}
 	for i, c := range channels {
 		result := <-c
-		if result != 8 {
-			t.Errorf("Multiply does not work correctly peer %v expected %v but got %v", i+1, 8, result)
+		if result != 10 {
+			t.Errorf("Multiply does not work correctly peer %v expected %v but got %v", i+1, 10, result)
 		}
 	}
 }
