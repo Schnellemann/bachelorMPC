@@ -2,7 +2,7 @@ package netpackage
 
 type NetPackage struct {
 	IpPorts []string
-	Share Share
+	Share   Share
 	Peer    string
 }
 
@@ -13,5 +13,10 @@ type PeerTuple struct {
 
 type Share struct {
 	Value      int64
-	Identifier string
+	Identifier ShareIdentifier
+}
+
+type ShareIdentifier struct {
+	Ins     string
+	PartyNr int
 }

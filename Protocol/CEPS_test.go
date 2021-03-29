@@ -3,60 +3,12 @@ package protocol
 import (
 	config "MPC/Config"
 	field "MPC/Fields"
-	netpack "MPC/Netpackage"
 	party "MPC/Party"
-	"sync"
 	"testing"
 	"time"
 )
 
 var ip string = "127.0.1.1"
-
-var peerlist []*mockPeer
-
-type mockPeer struct {
-	ShareChannel chan netpack.Share
-	finalSend    netpack.Share
-	partyNr      int
-}
-
-func mkMockPeer(partyNr int) *mockPeer {
-	m := new(mockPeer)
-	m.partyNr = partyNr
-	return m
-
-}
-
-func (m *mockPeer) StartPeer(shareChannel chan netpack.Share, wg *sync.WaitGroup) {
-	m.ShareChannel = shareChannel
-	wg.Done()
-}
-
-func (m *mockPeer) SendShares(shares []netpack.Share) {
-	for j := 0; j < len(peerlist); j++ {
-		if j != m.partyNr {
-			msgToSend := shares[j]
-			peerlist[j].ShareChannel <- msgToSend
-		}
-	}
-}
-
-func (m *mockPeer) SendFinal(share netpack.Share) {
-	for j := 0; j < len(peerlist); j++ {
-		if j != m.partyNr {
-			peerlist[j].ShareChannel <- share
-		}
-	}
-}
-
-func getXMockPeers(numberOfPeers int) []*mockPeer {
-	var mocks []*mockPeer
-	for i := 0; i < numberOfPeers; i++ {
-		mock := mkMockPeer(i + 1)
-		mocks = append(mocks, mock)
-	}
-	return mocks
-}
 
 func getXPeers(configList []*config.Config) []*party.Peer {
 	var peers []*party.Peer

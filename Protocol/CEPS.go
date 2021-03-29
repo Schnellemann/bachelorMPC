@@ -27,7 +27,7 @@ type fShares struct {
 }
 
 type rShares struct {
-	receivedShares map[string]*netpack.Share
+	receivedShares map[netpack.ShareIdentifier]*netpack.Share
 	mu             sync.Mutex
 }
 
@@ -38,7 +38,7 @@ func mkProtocol(config *config.Config, field field.Field, peer party.IPeer) *Cep
 	prot.peer = peer
 	prot.degree = int(math.Ceil(prot.config.ConstantConfig.NumberOfParties/2) - 1)
 	prot.shamir = makeShamirSecretSharing(config.VariableConfig.Secret, field, prot.degree)
-	prot.rShares = rShares{receivedShares: make(map[string]*netpack.Share)}
+	prot.rShares = rShares{receivedShares: make(map[netpack.ShareIdentifier]*netpack.Share)}
 	return prot
 }
 
@@ -64,7 +64,7 @@ func (prot *Ceps) run() int64 {
 		return 0
 	}
 	//Send input shares
-	toSendIdentifier := "p" + strconv.Itoa(int(prot.config.VariableConfig.PartyNr))
+	toSendIdentifier := netpack.ShareIdentifier{Ins: "p" + strconv.Itoa(int(prot.config.VariableConfig.PartyNr)), PartyNr: int(prot.config.VariableConfig.PartyNr)}
 	shares := prot.shamir.makeShares(int64(prot.config.ConstantConfig.NumberOfParties), toSendIdentifier)
 	prot.handleShare(shares)
 
@@ -89,7 +89,7 @@ func (prot *Ceps) receive() {
 	for {
 		message := <-prot.cMessages
 		fmt.Printf("Party %v got share {%v,%v}\n", prot.config.VariableConfig.PartyNr, message.Identifier, message.Value)
-		if string(message.Identifier[0]) == "o" {
+		if string(message.Identifier.Ins) == "o" {
 			prot.fShares.mu.Lock()
 			prot.fShares.finalShares = append(prot.fShares.finalShares, message)
 			prot.fShares.mu.Unlock()
@@ -102,8 +102,8 @@ func (prot *Ceps) receive() {
 	}
 }
 
-func (prot *Ceps) waitForShares(needToWaitOn []string) {
-	shares := make(map[string]*netpack.Share)
+func (prot *Ceps) waitForShares(needToWaitOn []netpack.ShareIdentifier) {
+	shares := make(map[netpack.ShareIdentifier]*netpack.Share)
 	for {
 		for _, s := range needToWaitOn {
 			prot.rShares.mu.Lock()
@@ -123,9 +123,9 @@ func (prot *Ceps) waitForShares(needToWaitOn []string) {
 func (prot *Ceps) addResultShare(insResult string, value int64) {
 	resultShare := &netpack.Share{}
 	resultShare.Value = value
-	resultShare.Identifier = "o" + strconv.Itoa(int(prot.config.VariableConfig.PartyNr))
+	resultShare.Identifier = netpack.ShareIdentifier{Ins: insResult, PartyNr: int(prot.config.VariableConfig.PartyNr)}
 	prot.rShares.mu.Lock()
-	prot.rShares.receivedShares[insResult] = resultShare
+	prot.rShares.receivedShares[resultShare.Identifier] = resultShare
 	prot.rShares.mu.Unlock()
 }
 
@@ -138,31 +138,47 @@ func (prot *Ceps) handleShare(shares []netpack.Share) {
 	prot.rShares.mu.Unlock()
 }
 
+func (prot *Ceps) createWaitShareIdentifier(ins string) netpack.ShareIdentifier {
+	var partyNr int
+	if string(ins[0]) == "p" {
+		partyNr, _ = strconv.Atoi(string(ins[1:]))
+
+	} else {
+		partyNr = int(prot.config.VariableConfig.PartyNr)
+	}
+	return netpack.ShareIdentifier{Ins: ins, PartyNr: partyNr}
+
+}
+
 func (prot *Ceps) add(ins config.Instruction) {
-	prot.waitForShares([]string{ins.Left, ins.Right})
+	leftIden := prot.createWaitShareIdentifier(ins.Left)
+	rightIden := prot.createWaitShareIdentifier(ins.Right)
+	prot.waitForShares([]netpack.ShareIdentifier{leftIden, rightIden})
 	prot.rShares.mu.Lock()
-	leftVal := prot.rShares.receivedShares[ins.Left].Value
-	rightVal := prot.rShares.receivedShares[ins.Right].Value
+	leftVal := prot.rShares.receivedShares[leftIden].Value
+	rightVal := prot.rShares.receivedShares[rightIden].Value
 	prot.rShares.mu.Unlock()
 	value := prot.shamir.field.Add(leftVal, rightVal)
 	prot.addResultShare(ins.Result, value)
 }
 
 func (prot *Ceps) multiply(instructionNumber int, ins config.Instruction) {
-	prot.waitForShares([]string{ins.Left, ins.Right})
+	leftIden := prot.createWaitShareIdentifier(ins.Left)
+	rightIden := prot.createWaitShareIdentifier(ins.Right)
+	prot.waitForShares([]netpack.ShareIdentifier{leftIden, rightIden})
 	//This is not the s0 value, but each party's perception of the value that they will use in the new polynomial
 	prot.rShares.mu.Lock()
-	leftVal := prot.rShares.receivedShares[ins.Left].Value
-	rightVal := prot.rShares.receivedShares[ins.Right].Value
+	leftVal := prot.rShares.receivedShares[leftIden].Value
+	rightVal := prot.rShares.receivedShares[rightIden].Value
 	prot.rShares.mu.Unlock()
 	secretValue := prot.shamir.field.Multiply(leftVal, rightVal)
 	SSS := makeShamirSecretSharing(secretValue, prot.shamir.field, prot.degree)
-	toSendIdentifier := "m" + strconv.Itoa(instructionNumber) + "," + strconv.Itoa(int(prot.config.VariableConfig.PartyNr))
+	toSendIdentifier := netpack.ShareIdentifier{Ins: "m" + strconv.Itoa(instructionNumber), PartyNr: int(prot.config.VariableConfig.PartyNr)}
 	shares := SSS.makeShares(int64(prot.config.ConstantConfig.NumberOfParties), toSendIdentifier)
 	prot.handleShare(shares)
-	var multiplicationIdentifiers []string
+	var multiplicationIdentifiers []netpack.ShareIdentifier
 	for i := 1; i <= int(prot.config.ConstantConfig.NumberOfParties); i++ {
-		multiplicationIdentifiers = append(multiplicationIdentifiers, ("m" + strconv.Itoa(instructionNumber) + "," + strconv.Itoa(i)))
+		multiplicationIdentifiers = append(multiplicationIdentifiers, netpack.ShareIdentifier{Ins: "m" + strconv.Itoa(instructionNumber), PartyNr: i})
 	}
 	prot.waitForShares(multiplicationIdentifiers)
 	//Now we can actually get our value
@@ -175,25 +191,27 @@ func (prot *Ceps) multiply(instructionNumber int, ins config.Instruction) {
 }
 
 func (prot *Ceps) scalar(ins config.Instruction) {
-	prot.waitForShares([]string{ins.Right})
+	rightIden := prot.createWaitShareIdentifier(ins.Right)
+	prot.waitForShares([]netpack.ShareIdentifier{rightIden})
 	scalar, err := strconv.Atoi(ins.Left)
 	if err != nil {
 		println("Received non-integer as scalar in instruction")
 		return
 	}
 	prot.rShares.mu.Lock()
-	varValue := prot.rShares.receivedShares[ins.Right].Value
+	varValue := prot.rShares.receivedShares[rightIden].Value
 	prot.rShares.mu.Unlock()
 	value := prot.shamir.field.Multiply(int64(scalar), varValue)
 	prot.addResultShare(ins.Result, value)
 }
 
 func (prot *Ceps) outputReconstruction(finalResult string) int64 {
+	resIden := prot.createWaitShareIdentifier(finalResult)
 	//Send out result share
 	prot.rShares.mu.Lock()
-	resultShare := prot.rShares.receivedShares[finalResult]
+	resultShare := prot.rShares.receivedShares[resIden]
 	prot.rShares.mu.Unlock()
-	resultShare.Identifier = "o" + strconv.Itoa(int(prot.config.VariableConfig.PartyNr))
+	resultShare.Identifier = netpack.ShareIdentifier{Ins: "o", PartyNr: int(prot.config.VariableConfig.PartyNr)}
 	prot.peer.SendFinal(*resultShare)
 	prot.fShares.mu.Lock()
 	prot.fShares.finalShares = append(prot.fShares.finalShares, *resultShare)

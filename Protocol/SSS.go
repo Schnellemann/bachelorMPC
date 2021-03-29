@@ -5,7 +5,6 @@ import (
 	netpack "MPC/Netpackage"
 	"errors"
 	"fmt"
-	"strconv"
 )
 
 type ShamirSecretSharing struct {
@@ -37,14 +36,8 @@ func (s ShamirSecretSharing) lagrangeInterpolation(shares []netpack.Share, degre
 		denominator := int64(1)
 		for j := 0; j <= degree; j++ {
 			if j != i {
-				identifierI := shares[i].Identifier
-				identifierJ := shares[j].Identifier
-				numberI, err := strconv.Atoi(string(identifierI[1:]))
-				numberJ, err2 := strconv.Atoi(string(identifierJ[1:]))
-				if err != nil || err2 != nil {
-					fmt.Printf("String conversion error in lagrange, %v or %v\n", err, err2)
-				}
-
+				numberI := shares[i].Identifier.PartyNr
+				numberJ := shares[j].Identifier.PartyNr
 				enumerator = s.field.Multiply(enumerator, s.field.Neg(int64(numberJ)))
 				denominator = s.field.Multiply(denominator, (s.field.Minus(int64(numberI), int64(numberJ))))
 			}
@@ -54,7 +47,7 @@ func (s ShamirSecretSharing) lagrangeInterpolation(shares []netpack.Share, degre
 	return result, nil
 }
 
-func (s ShamirSecretSharing) makeShares(numberOfParties int64, identifier string) (shares []netpack.Share) {
+func (s ShamirSecretSharing) makeShares(numberOfParties int64, identifier netpack.ShareIdentifier) (shares []netpack.Share) {
 	for i := 1; i <= int(numberOfParties); i++ {
 		share := new(netpack.Share)
 		share.Identifier = identifier
