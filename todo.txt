@@ -1,28 +1,6 @@
-Test partyProgress
 
-Do instructions
-
-- Find out how to do multiply 
-- Get recomputation vector from lagrange - used for at least multiply
-    Maybe just change method to get two things
-
-- new message how do we infer which instruction a share is meant for
-    Use "o#" for output
-    Use "p#" for input
-    Use "i#,#" for instruction #
-
-- Store a map with instruction# -> []share?
-    - How do we keep count of shares for a given instruction?
-    - use int for instruction# coresponding to index in instructionList
-    - instruction# = -1 used for input
-    - instruction# = len(instructionList) used for output
-    
-- Use find method on a list of shares to find a given share with identification x
-    returns bool denoting whether the share was found or not
-
-Use waitgroup for waiting for shares
-- If current instruction needs x shares, add x to wait group
-- When receiving ANY share, do waitgroup.done() such that when x received shares
-  The instruction checks again adding x' if it still is missing shares
-
-
+Adversary implementation
+- Should we? if yes then
+    - Work on the www?
+    - 
+    - Collector vs. each peer as adversary

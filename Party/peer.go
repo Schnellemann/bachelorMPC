@@ -7,7 +7,6 @@ import (
 	"encoding/gob"
 	"fmt"
 	"net"
-	"sort"
 	"sync"
 )
 
@@ -192,14 +191,6 @@ func (p *Peer) handleConnection(dec *gob.Decoder) {
 			}
 		}
 	}
-}
-
-func (p *Peer) sortConnections() {
-	p.connections.lock.Lock()
-	sort.SliceStable(p.connections, func(i, j int) bool {
-		return p.connections.c[i].Number < p.connections.c[j].Number
-	})
-	p.connections.lock.Unlock()
 }
 
 func (p *Peer) addEntryDecoderMap(decoder *gob.Decoder, conTuble *ConnectionTuple) {
