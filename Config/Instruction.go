@@ -7,6 +7,12 @@ type Instruction struct {
 	Result string
 }
 
+type InstructionTree struct {
+	Left        *InstructionTree
+	Right       *InstructionTree
+	Instruction *Instruction
+}
+
 type Operator int
 
 const (

@@ -18,6 +18,10 @@ func ParseExpression(exp string) ast.Expr {
 
 }
 
+func ConvertAstToTree(exp ast.Expr) (*InstructionTree, error) {
+	return nil, nil
+}
+
 //Returns result identifier and a list of instructions which are the operations that needs to be computed in the given order
 //returns convertErr if conversion failed
 func ConvertAstToExpressionList(exp ast.Expr) (string, []Instruction, error) {

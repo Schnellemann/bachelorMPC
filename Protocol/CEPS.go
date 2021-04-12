@@ -69,20 +69,25 @@ func (prot *Ceps) run() int64 {
 	prot.handleShare(shares)
 
 	//Do instructions
+	calculateInstruction(instructionTree)
 	for i, ins := range instructionList {
-		switch ins.Op {
-		case config.Add:
-			prot.add(ins)
-		case config.Multiply:
-			prot.multiply(i, ins)
-		case config.Scalar:
-			prot.scalar(ins)
-		}
+
 	}
 
 	//output reconstruction
 	res := prot.outputReconstruction(finalResult)
 	return res
+}
+
+func calculateInstruction(instructionTree config.InstructionTree) {
+	switch ins.Op {
+	case config.Add:
+		prot.add(ins)
+	case config.Multiply:
+		prot.multiply(i, ins)
+	case config.Scalar:
+		prot.scalar(ins)
+	}
 }
 
 func (prot *Ceps) receive() {
