@@ -12,18 +12,34 @@ import (
 )
 
 type Ceps struct {
-	config     *config.Config
-	peer       party.IPeer
-	shamir     *ShamirSecretSharing
-	cMessages  chan netpack.Share
-	rShares    rShares
-	degree     int
-	fShares    fShares
-	multInsNum incrementer
+	config       *config.Config
+	peer         party.IPeer
+	shamir       *ShamirSecretSharing
+	cMessages    chan netpack.Share
+	rShares      rShares
+	degree       int
+	fShares      fShares
+	multInsNum   incrementer
+	subscribeMap subscribeMap
+}
+
+type subscribeMap struct {
+	m    map[netpack.ShareIdentifier]chan int
+	lock sync.Mutex
+}
+
+func (subM *subscribeMap) ping(iden netpack.ShareIdentifier) {
+	subM.lock.Lock()
+	c := subM.m[iden]
+	subM.lock.Unlock()
+	if c != nil {
+		c <- 1
+	}
+
 }
 
 type incrementer struct {
-	nr   int
+	num  int
 	lock sync.Mutex
 }
 
@@ -45,6 +61,7 @@ func mkProtocol(config *config.Config, field field.Field, peer party.IPeer) *Cep
 	prot.degree = int(math.Ceil(prot.config.ConstantConfig.NumberOfParties/2) - 1)
 	prot.shamir = makeShamirSecretSharing(config.VariableConfig.Secret, field, prot.degree)
 	prot.rShares = rShares{receivedShares: make(map[netpack.ShareIdentifier]*netpack.Share)}
+	prot.subscribeMap = subscribeMap{m: make(map[netpack.ShareIdentifier]chan int)}
 	return prot
 }
 
@@ -95,8 +112,8 @@ func (prot *Ceps) calculateInstruction(instructionTree config.InstructionTree) {
 		prot.add(*instructionTree.Instruction)
 	case config.Multiply:
 		prot.multInsNum.lock.Lock()
-		prot.multInsNum.nr += 1
-		prot.multiply(prot.multInsNum.nr, *instructionTree.Instruction)
+		prot.multInsNum.num += 1
+		prot.multiply(prot.multInsNum.num, *instructionTree.Instruction)
 		prot.multInsNum.lock.Unlock()
 	case config.Scalar:
 		prot.scalar(*instructionTree.Instruction)
@@ -116,13 +133,30 @@ func (prot *Ceps) receive() {
 			prot.rShares.mu.Lock()
 			prot.rShares.receivedShares[message.Identifier] = &message
 			prot.rShares.mu.Unlock()
+			go prot.subscribeMap.ping(message.Identifier)
 		}
 
 	}
 }
 
 func (prot *Ceps) waitForShares(needToWaitOn []netpack.ShareIdentifier) {
-	shares := make(map[netpack.ShareIdentifier]*netpack.Share)
+	var waitChannels []chan int
+	prot.subscribeMap.lock.Lock()
+	prot.rShares.mu.Lock()
+	for _, s := range needToWaitOn {
+		if prot.rShares.receivedShares[s] == nil {
+			c := make(chan int)
+			prot.subscribeMap.m[s] = c
+			waitChannels = append(waitChannels, c)
+		}
+	}
+	prot.rShares.mu.Unlock()
+	prot.subscribeMap.lock.Unlock()
+	for _, c := range waitChannels {
+		<-c
+	}
+
+	/* shares := make(map[netpack.ShareIdentifier]*netpack.Share)
 	for {
 		for _, s := range needToWaitOn {
 			prot.rShares.mu.Lock()
@@ -135,7 +169,7 @@ func (prot *Ceps) waitForShares(needToWaitOn []netpack.ShareIdentifier) {
 		if len(shares) == len(needToWaitOn) {
 			return
 		}
-	}
+	} */
 
 }
 
@@ -146,6 +180,7 @@ func (prot *Ceps) addResultShare(insResult string, value int64) {
 	prot.rShares.mu.Lock()
 	prot.rShares.receivedShares[resultShare.Identifier] = resultShare
 	prot.rShares.mu.Unlock()
+	go prot.subscribeMap.ping(resultShare.Identifier)
 }
 
 func (prot *Ceps) handleShare(shares []netpack.Share) {
@@ -155,6 +190,7 @@ func (prot *Ceps) handleShare(shares []netpack.Share) {
 	myShare := shares[int(prot.config.VariableConfig.PartyNr)-1]
 	prot.rShares.receivedShares[myShare.Identifier] = &myShare
 	prot.rShares.mu.Unlock()
+	go prot.subscribeMap.ping(myShare.Identifier)
 }
 
 func (prot *Ceps) createWaitShareIdentifier(ins string) netpack.ShareIdentifier {
