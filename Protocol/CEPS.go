@@ -57,7 +57,7 @@ func (prot *Ceps) run() int64 {
 	//Convert string expression into instruction list
 	exp := prot.config.ConstantConfig.Expression
 	astExp := config.ParseExpression(exp)
-	finalResult, instructionList, err := config.ConvertAstToExpressionList(astExp)
+	instructionTree, err := config.ConvertAstToTree(astExp)
 	if err != nil {
 		//TODO maybe shut down peer?
 		println(err.Error())
@@ -69,10 +69,7 @@ func (prot *Ceps) run() int64 {
 	prot.handleShare(shares)
 
 	//Do instructions
-	calculateInstruction(instructionTree)
-	for i, ins := range instructionList {
-
-	}
+	calculateInstruction(*instructionTree)
 
 	//output reconstruction
 	res := prot.outputReconstruction(finalResult)

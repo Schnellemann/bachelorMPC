@@ -158,7 +158,13 @@ func TestSendShares(t *testing.T) {
 	p5.StartPeer(pChan5, &wg)
 	time.Sleep(1 * time.Second)
 	wg.Wait()
-	shares := []netpackage.Share{{Value: 1, Identifier: "share1"}, {Value: 2, Identifier: "share2"}, {Value: 3, Identifier: "share3"}, {Value: 4, Identifier: "share4"}, {Value: 5, Identifier: "share5"}}
+	shares := []netpackage.Share{
+		{Value: 1, Identifier: netpackage.ShareIdentifier{Ins: "share1", PartyNr: 1}},
+		{Value: 2, Identifier: netpackage.ShareIdentifier{Ins: "share2", PartyNr: 1}},
+		{Value: 3, Identifier: netpackage.ShareIdentifier{Ins: "share3", PartyNr: 1}},
+		{Value: 4, Identifier: netpackage.ShareIdentifier{Ins: "share4", PartyNr: 1}},
+		{Value: 5, Identifier: netpackage.ShareIdentifier{Ins: "share5", PartyNr: 1}},
+	}
 
 	p.SendShares(shares)
 	share2Res := <-pChan2
@@ -166,16 +172,16 @@ func TestSendShares(t *testing.T) {
 	share4Res := <-pChan4
 	share5Res := <-pChan5
 
-	if share2Res.Value != 2 && share2Res.Identifier != "share2" {
+	if share2Res.Value != 2 && share2Res.Identifier.Ins != "share2" {
 		t.Errorf("Wrong share recieved at peer2, should have value: %v, got: %v", 2, share2Res.Value)
 	}
-	if share3Res.Value != 3 && share3Res.Identifier != "share3" {
+	if share3Res.Value != 3 && share3Res.Identifier.Ins != "share3" {
 		t.Errorf("Wrong share recieved at peer3, should have value: %v, got: %v", 3, share3Res.Value)
 	}
-	if share3Res.Value != 4 && share4Res.Identifier != "share4" {
+	if share3Res.Value != 4 && share4Res.Identifier.Ins != "share4" {
 		t.Errorf("Wrong share recieved at peer3, should have value: %v, got: %v", 4, share4Res.Value)
 	}
-	if share3Res.Value != 5 && share5Res.Identifier != "share5" {
+	if share3Res.Value != 5 && share5Res.Identifier.Ins != "share5" {
 		t.Errorf("Wrong share recieved at peer3, should have value: %v, got: %v", 5, share5Res.Value)
 	}
 }
