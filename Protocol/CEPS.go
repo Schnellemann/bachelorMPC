@@ -12,13 +12,19 @@ import (
 )
 
 type Ceps struct {
-	config    *config.Config
-	peer      party.IPeer
-	shamir    *ShamirSecretSharing
-	cMessages chan netpack.Share
-	rShares   rShares
-	degree    int
-	fShares   fShares
+	config     *config.Config
+	peer       party.IPeer
+	shamir     *ShamirSecretSharing
+	cMessages  chan netpack.Share
+	rShares    rShares
+	degree     int
+	fShares    fShares
+	multInsNum incrementer
+}
+
+type incrementer struct {
+	nr   int
+	lock sync.Mutex
 }
 
 type fShares struct {
@@ -69,22 +75,33 @@ func (prot *Ceps) run() int64 {
 	prot.handleShare(shares)
 
 	//Do instructions
-	calculateInstruction(*instructionTree)
+	prot.calculateInstruction(*instructionTree)
+	finalResult := instructionTree.Instruction.Result
 
 	//output reconstruction
 	res := prot.outputReconstruction(finalResult)
 	return res
 }
 
-func calculateInstruction(instructionTree config.InstructionTree) {
-	switch ins.Op {
-	case config.Add:
-		prot.add(ins)
-	case config.Multiply:
-		prot.multiply(i, ins)
-	case config.Scalar:
-		prot.scalar(ins)
+func (prot *Ceps) calculateInstruction(instructionTree config.InstructionTree) {
+	if instructionTree.Left != nil {
+		go prot.calculateInstruction(*instructionTree.Left)
 	}
+	if instructionTree.Right != nil {
+		go prot.calculateInstruction(*instructionTree.Right)
+	}
+	switch instructionTree.Instruction.Op {
+	case config.Add:
+		prot.add(*instructionTree.Instruction)
+	case config.Multiply:
+		prot.multInsNum.lock.Lock()
+		prot.multInsNum.nr += 1
+		prot.multiply(prot.multInsNum.nr, *instructionTree.Instruction)
+		prot.multInsNum.lock.Unlock()
+	case config.Scalar:
+		prot.scalar(*instructionTree.Instruction)
+	}
+	return
 }
 
 func (prot *Ceps) receive() {
