@@ -13,14 +13,15 @@ import (
 )
 
 type Ceps struct {
-	config       *config.Config
-	peer         party.IPeer
-	shamir       *ShamirSecretSharing
-	cMessages    chan netpack.Share
-	rShares      rShares
-	degree       int
-	fShares      fShares
-	subscribeMap subscribeMap
+	config        *config.Config
+	peer          party.IPeer
+	shamir        *ShamirSecretSharing
+	cMessages     chan netpack.Share
+	rShares       rShares
+	degree        int
+	fShares       fShares
+	subscribeMap  subscribeMap
+	listOfRandoms []randoms
 }
 
 type subscribeMap struct {
