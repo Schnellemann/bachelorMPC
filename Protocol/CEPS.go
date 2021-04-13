@@ -5,6 +5,7 @@ import (
 	field "MPC/Fields"
 	netpack "MPC/Netpackage"
 	party "MPC/Party"
+	parsing "MPC/parsing"
 	"fmt"
 	"math"
 	"strconv"
@@ -19,7 +20,6 @@ type Ceps struct {
 	rShares      rShares
 	degree       int
 	fShares      fShares
-	multInsNum   incrementer
 	subscribeMap subscribeMap
 }
 
@@ -36,11 +36,6 @@ func (subM *subscribeMap) ping(iden netpack.ShareIdentifier) {
 		c <- 1
 	}
 
-}
-
-type incrementer struct {
-	num  int
-	lock sync.Mutex
 }
 
 type fShares struct {
@@ -79,8 +74,8 @@ func (prot *Ceps) run() int64 {
 	go prot.receive()
 	//Convert string expression into instruction list
 	exp := prot.config.ConstantConfig.Expression
-	astExp := config.ParseExpression(exp)
-	instructionTree, err := config.ConvertAstToTree(astExp)
+	astExp := parsing.ParseExpression(exp)
+	instructionTree, err := parsing.ConvertAstToTree(astExp)
 	if err != nil {
 		//TODO maybe shut down peer?
 		println(err.Error())
@@ -92,33 +87,32 @@ func (prot *Ceps) run() int64 {
 	prot.handleShare(shares)
 
 	//Do instructions
-	prot.calculateInstruction(*instructionTree)
-	finalResult := instructionTree.Instruction.Result
+	prot.calculateInstruction(instructionTree)
 
 	//output reconstruction
-	res := prot.outputReconstruction(finalResult)
+	res := prot.outputReconstruction(instructionTree.GetResultName())
 	return res
 }
 
-func (prot *Ceps) calculateInstruction(instructionTree config.InstructionTree) {
+func (prot *Ceps) calculateInstruction(instructionTree *parsing.InstructionTree) {
+
 	if instructionTree.Left != nil {
-		go prot.calculateInstruction(*instructionTree.Left)
+		go prot.calculateInstruction(instructionTree.Left)
 	}
 	if instructionTree.Right != nil {
-		go prot.calculateInstruction(*instructionTree.Right)
+		go prot.calculateInstruction(instructionTree.Right)
 	}
-	switch instructionTree.Instruction.Op {
-	case config.Add:
-		prot.add(*instructionTree.Instruction)
-	case config.Multiply:
-		prot.multInsNum.lock.Lock()
-		prot.multInsNum.num += 1
-		prot.multiply(prot.multInsNum.num, *instructionTree.Instruction)
-		prot.multInsNum.lock.Unlock()
-	case config.Scalar:
-		prot.scalar(*instructionTree.Instruction)
+	switch ins := instructionTree.Instruction.(type) {
+	case *parsing.AddInstruction:
+		prot.add(ins)
+	case *parsing.MultInstruction:
+		prot.multiply(ins)
+	case *parsing.ScalarInstruction:
+		prot.scalar(ins)
+	default:
+		fmt.Printf("Unknown instruction %v", ins)
 	}
-	return
+	// return
 }
 
 func (prot *Ceps) receive() {
@@ -155,22 +149,6 @@ func (prot *Ceps) waitForShares(needToWaitOn []netpack.ShareIdentifier) {
 	for _, c := range waitChannels {
 		<-c
 	}
-
-	/* shares := make(map[netpack.ShareIdentifier]*netpack.Share)
-	for {
-		for _, s := range needToWaitOn {
-			prot.rShares.mu.Lock()
-			temp := prot.rShares.receivedShares[s]
-			prot.rShares.mu.Unlock()
-			if temp != nil {
-				shares[s] = temp
-			}
-		}
-		if len(shares) == len(needToWaitOn) {
-			return
-		}
-	} */
-
 }
 
 func (prot *Ceps) addResultShare(insResult string, value int64) {
@@ -205,7 +183,7 @@ func (prot *Ceps) createWaitShareIdentifier(ins string) netpack.ShareIdentifier 
 
 }
 
-func (prot *Ceps) add(ins config.Instruction) {
+func (prot *Ceps) add(ins *parsing.AddInstruction) {
 	leftIden := prot.createWaitShareIdentifier(ins.Left)
 	rightIden := prot.createWaitShareIdentifier(ins.Right)
 	prot.waitForShares([]netpack.ShareIdentifier{leftIden, rightIden})
@@ -217,7 +195,7 @@ func (prot *Ceps) add(ins config.Instruction) {
 	prot.addResultShare(ins.Result, value)
 }
 
-func (prot *Ceps) multiply(instructionNumber int, ins config.Instruction) {
+func (prot *Ceps) multiply(ins *parsing.MultInstruction) {
 	leftIden := prot.createWaitShareIdentifier(ins.Left)
 	rightIden := prot.createWaitShareIdentifier(ins.Right)
 	prot.waitForShares([]netpack.ShareIdentifier{leftIden, rightIden})
@@ -228,12 +206,12 @@ func (prot *Ceps) multiply(instructionNumber int, ins config.Instruction) {
 	prot.rShares.mu.Unlock()
 	secretValue := prot.shamir.field.Multiply(leftVal, rightVal)
 	SSS := makeShamirSecretSharing(secretValue, prot.shamir.field, prot.degree)
-	toSendIdentifier := netpack.ShareIdentifier{Ins: "m" + strconv.Itoa(instructionNumber), PartyNr: int(prot.config.VariableConfig.PartyNr)}
+	toSendIdentifier := netpack.ShareIdentifier{Ins: "m" + strconv.Itoa(ins.Num), PartyNr: int(prot.config.VariableConfig.PartyNr)}
 	shares := SSS.makeShares(int64(prot.config.ConstantConfig.NumberOfParties), toSendIdentifier)
 	prot.handleShare(shares)
 	var multiplicationIdentifiers []netpack.ShareIdentifier
 	for i := 1; i <= int(prot.config.ConstantConfig.NumberOfParties); i++ {
-		multiplicationIdentifiers = append(multiplicationIdentifiers, netpack.ShareIdentifier{Ins: "m" + strconv.Itoa(instructionNumber), PartyNr: i})
+		multiplicationIdentifiers = append(multiplicationIdentifiers, netpack.ShareIdentifier{Ins: "m" + strconv.Itoa(ins.Num), PartyNr: i})
 	}
 	prot.waitForShares(multiplicationIdentifiers)
 
@@ -248,18 +226,14 @@ func (prot *Ceps) multiply(instructionNumber int, ins config.Instruction) {
 	prot.addResultShare(ins.Result, value)
 }
 
-func (prot *Ceps) scalar(ins config.Instruction) {
-	rightIden := prot.createWaitShareIdentifier(ins.Right)
+func (prot *Ceps) scalar(ins *parsing.ScalarInstruction) {
+	rightIden := prot.createWaitShareIdentifier(ins.Variable)
 	prot.waitForShares([]netpack.ShareIdentifier{rightIden})
-	scalar, err := strconv.Atoi(ins.Left)
-	if err != nil {
-		println("Received non-integer as scalar in instruction")
-		return
-	}
 	prot.rShares.mu.Lock()
 	varValue := prot.rShares.receivedShares[rightIden].Value
 	prot.rShares.mu.Unlock()
-	value := prot.shamir.field.Multiply(int64(scalar), varValue)
+	scalar := prot.shamir.field.Convert(int64(ins.Scalar))
+	value := prot.shamir.field.Multiply(scalar, varValue)
 	prot.addResultShare(ins.Result, value)
 }
 
