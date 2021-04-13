@@ -18,6 +18,18 @@ func ParseExpression(exp string) ast.Expr {
 
 }
 
+func (tree *InstructionTree) countMults() int {
+	if tree == nil {
+		return 0
+	} else {
+		isMult := 0
+		if tree.Instruction.Op == Multiply {
+			isMult = 1
+		}
+		return isMult + tree.Left.countMults() + tree.Right.countMults()
+	}
+}
+
 func ConvertAstToTree(exp ast.Expr) (*InstructionTree, error) {
 	_, tree, err := convertAstAux(0, exp)
 	return tree, err
