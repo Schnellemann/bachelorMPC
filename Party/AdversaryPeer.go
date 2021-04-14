@@ -17,6 +17,13 @@ func (p *AdversaryPeer) SendShares(shares []netpack.Share) {
 
 }
 
+func (p *AdversaryPeer) SendShare(share netpack.Share, receiver int) {
+	//Change such that it gets all shares (including its own)
+	//Send to collector
+	p.peer.SendShare(share, receiver)
+
+}
+
 func (p *AdversaryPeer) StartPeer(messagechannel chan netpack.Share, wg *sync.WaitGroup) {
 	p.toProtocolChannel = messagechannel
 	peerChannel := make(chan netpack.Share)

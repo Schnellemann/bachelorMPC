@@ -86,6 +86,7 @@ func (p *Peer) StartPeer(shareChannel chan netpack.Share, wg *sync.WaitGroup) {
 
 //Send Methods
 func (p *Peer) SendShares(shareList []netpack.Share) {
+	p.cShare <- shareList[p.Number-1]
 	p.connections.lock.Lock()
 	for _, s := range p.connections.c {
 		netPackage := new(netpack.NetPackage)
@@ -93,6 +94,24 @@ func (p *Peer) SendShares(shareList []netpack.Share) {
 		p.write(s.Connection, netPackage)
 	}
 	p.connections.lock.Unlock()
+}
+
+func (p *Peer) SendShare(share netpack.Share, receiver int) {
+	if receiver == p.Number {
+		p.cShare <- share
+	} else {
+		p.connections.lock.Lock()
+		for i := range p.connections.c {
+			if p.connections.c[i].Number == receiver {
+				netPackage := new(netpack.NetPackage)
+				netPackage.Share = share
+				p.write(p.connections.c[i].Connection, netPackage)
+				break
+			}
+		}
+		p.connections.lock.Unlock()
+	}
+
 }
 
 func (p *Peer) sendPeerlist(encoder *gob.Encoder) {

@@ -46,7 +46,6 @@ func TestAdd(t *testing.T) {
 }
 
 func TestScalar(t *testing.T) {
-
 	configs := config.MakeConfigs(ip, "2*p3", []int{4, 7, 3, 2, 1})
 	peerlist := getXPeers(configs)
 	var channels []chan int64
