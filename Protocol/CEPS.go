@@ -84,6 +84,7 @@ func (prot *Ceps) run() int64 {
 		println(err.Error())
 		return 0
 	}
+	prot.runPreprocess(instructionTree.CountMults())
 	//Send input shares
 	toSendIdentifier := netpack.ShareIdentifier{Ins: "p" + strconv.Itoa(int(prot.config.VariableConfig.PartyNr)), PartyNr: int(prot.config.VariableConfig.PartyNr)}
 	shares := prot.shamir.makeShares(int64(prot.config.ConstantConfig.NumberOfParties), toSendIdentifier)
@@ -204,6 +205,7 @@ func (prot *Ceps) multiply(ins *parsing.MultInstruction) {
 	ab2t := prot.shamir.field.Multiply(a, b)
 	if ins.Num-1 >= len(prot.listOfRandoms) {
 		fmt.Printf("Impossible - did not have enough r-values for mult %v", ins.Num)
+		return
 	}
 	rPair := prot.listOfRandoms[ins.Num-1]
 	abMinusrShare := prot.shamir.field.Minus(ab2t, rPair.r2t)
