@@ -86,6 +86,26 @@ func TestMultiply(t *testing.T) {
 	}
 }
 
+func TestSmallMultiply(t *testing.T) {
+	configs := config.MakeConfigs(ip, "p2*p3", []int{11, 4, 9})
+	peerlist := getXPeers(configs)
+	var channels []chan int64
+	for i, c := range configs {
+		channel := make(chan int64)
+		channels = append(channels, channel)
+		//Make protocol
+		prot := mkProtocol(c, field.MakeModPrime(13), peerlist[i])
+		go prot.goProt(channel)
+		time.Sleep(200 * time.Millisecond)
+	}
+	for i, c := range channels {
+		result := <-c
+		if result != 10 {
+			t.Errorf("Multiply does not work correctly peer %v expected %v but got %v", i+1, 10, result)
+		}
+	}
+}
+
 func TestCombined(t *testing.T) {
 	//19+12*4+2*40 mod 43 = 18
 	configs := config.MakeConfigs(ip, "p1+p2*p4+2*p3", []int{19, 12, 40, 4})

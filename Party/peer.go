@@ -86,6 +86,13 @@ func (p *Peer) StartPeer(shareChannel chan netpack.Share, wg *sync.WaitGroup) {
 
 //Send Methods
 func (p *Peer) SendShares(shareList []netpack.Share) {
+	p.connections.lock.Lock()
+	connections := len(p.connections.c)
+	p.connections.lock.Unlock()
+	if len(shareList) != connections+1 {
+		fmt.Printf("Received sharelist is not of correct length have %v connections, got %v shares, expected %v\n", connections, len(shareList), connections+1)
+	}
+
 	p.cShare <- shareList[p.Number-1]
 	p.connections.lock.Lock()
 	for _, s := range p.connections.c {

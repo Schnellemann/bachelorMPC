@@ -8,7 +8,9 @@ import (
 	"strconv"
 )
 
-var multCounter int
+type parse struct {
+	multCounter int
+}
 
 func ParseExpression(exp string) ast.Expr {
 	aexp, err := parser.ParseExpr(exp)
@@ -35,8 +37,8 @@ func (tree *InstructionTree) CountMults() int {
 }
 
 func ConvertAstToTree(exp ast.Expr) (*InstructionTree, error) {
-	multCounter = 1
-	_, tree, err := convertAstAux(0, exp)
+	p := &parse{1}
+	_, tree, err := p.convertAstAux(0, exp)
 	return tree, err
 }
 
@@ -53,25 +55,25 @@ func (tree *InstructionTree) GetResultName() string {
 	}
 }
 
-func convertAstAux(unique int, exp ast.Expr) (int, *InstructionTree, error) {
+func (p *parse) convertAstAux(unique int, exp ast.Expr) (int, *InstructionTree, error) {
 	switch exp := exp.(type) {
 	case *ast.BinaryExpr:
-		return convertBinaryExpr(unique, exp)
+		return p.convertBinaryExpr(unique, exp)
 	case *ast.BasicLit, *ast.Ident:
 		return unique, nil, nil
 	case *ast.ParenExpr:
-		return convertAstAux(unique, exp.X)
+		return p.convertAstAux(unique, exp.X)
 	default:
 		return 0, nil, fmt.Errorf("Failed to convert ast to InstructionTree - Unsupported ast-token")
 	}
 }
 
-func convertBinaryExpr(unique int, exp *ast.BinaryExpr) (int, *InstructionTree, error) {
-	leftUnique, leftSubTree, err := convertAstAux(unique, exp.X)
+func (p *parse) convertBinaryExpr(unique int, exp *ast.BinaryExpr) (int, *InstructionTree, error) {
+	leftUnique, leftSubTree, err := p.convertAstAux(unique, exp.X)
 	if err != nil {
 		return 0, nil, err
 	}
-	rightUnique, rightSubTree, err := convertAstAux(leftUnique, exp.Y)
+	rightUnique, rightSubTree, err := p.convertAstAux(leftUnique, exp.Y)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -100,8 +102,8 @@ func convertBinaryExpr(unique int, exp *ast.BinaryExpr) (int, *InstructionTree, 
 				binaryIns = createScalar(scalar, getExprName(exp.X, rightUnique), "r"+strconv.Itoa(unique))
 			default:
 				//None were basic lits so mul
-				binaryIns = createMultiplication(getExprName(exp.X, leftUnique), getExprName(exp.Y, rightUnique), "r"+strconv.Itoa(unique), multCounter)
-				multCounter++
+				binaryIns = createMultiplication(getExprName(exp.X, leftUnique), getExprName(exp.Y, rightUnique), "r"+strconv.Itoa(unique), p.multCounter)
+				p.multCounter += 1
 			}
 		}
 	}

@@ -131,8 +131,8 @@ func (prot *Ceps) receive() {
 			prot.rShares.mu.Lock()
 			prot.rShares.receivedShares[message.Identifier] = &message
 			prot.rShares.mu.Unlock()
-			go prot.subscribeMap.ping(message.Identifier)
 		}
+		go prot.subscribeMap.ping(message.Identifier)
 
 	}
 }
@@ -167,7 +167,7 @@ func (prot *Ceps) addResultShare(insResult string, value int64) {
 
 func (prot *Ceps) handleShare(shares []netpack.Share) {
 	fmt.Printf("Party %v send %v\n", prot.config.VariableConfig.PartyNr, shares)
-	prot.peer.SendShares(shares)
+	go prot.peer.SendShares(shares)
 }
 
 func (prot *Ceps) createWaitShareIdentifier(ins string) netpack.ShareIdentifier {
@@ -203,8 +203,9 @@ func (prot *Ceps) multiply(ins *parsing.MultInstruction) {
 	b := prot.rShares.receivedShares[rightIden].Value
 	prot.rShares.mu.Unlock()
 	ab2t := prot.shamir.field.Multiply(a, b)
-	if ins.Num-1 >= len(prot.listOfRandoms) {
-		fmt.Printf("Impossible - did not have enough r-values for mult %v", ins.Num)
+	if ins.Num > len(prot.listOfRandoms) {
+		fmt.Printf("Impossible - party %v did not have enough r-values for mult %v\n", prot.config.VariableConfig.PartyNr, ins.Num)
+		fmt.Printf("party %v r-values: %v\n", prot.config.VariableConfig.PartyNr, prot.listOfRandoms)
 		return
 	}
 	rPair := prot.listOfRandoms[ins.Num-1]

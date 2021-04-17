@@ -74,7 +74,7 @@ func (prot *Ceps) runPreprocess(numberOfMults int) {
 		//Wait for shares
 		var randomfIdentifiers []netpack.ShareIdentifier
 		var randomgIdentifiers []netpack.ShareIdentifier
-		for j := 1; i <= int(prot.config.ConstantConfig.NumberOfParties); i++ {
+		for j := 1; j <= int(prot.config.ConstantConfig.NumberOfParties); j++ {
 			randomfIdentifiers = append(randomfIdentifiers, netpack.ShareIdentifier{Ins: "f" + strconv.Itoa(i), PartyNr: j})
 			randomgIdentifiers = append(randomgIdentifiers, netpack.ShareIdentifier{Ins: "g" + strconv.Itoa(i), PartyNr: j})
 		}
