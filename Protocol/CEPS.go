@@ -122,7 +122,7 @@ func (prot *Ceps) calculateInstruction(instructionTree *parsing.InstructionTree)
 func (prot *Ceps) receive() {
 	for {
 		message := <-prot.cMessages
-		fmt.Printf("Party %v got share {%v,%v}\n", prot.config.VariableConfig.PartyNr, message.Identifier, message.Value)
+		//fmt.Printf("Party %v got share {%v,%v}\n", prot.config.VariableConfig.PartyNr, message.Identifier, message.Value)
 		if string(message.Identifier.Ins) == "o" {
 			prot.fShares.mu.Lock()
 			prot.fShares.finalShares = append(prot.fShares.finalShares, message)
@@ -139,8 +139,9 @@ func (prot *Ceps) receive() {
 
 func (prot *Ceps) waitForShares(needToWaitOn []netpack.ShareIdentifier) {
 	var waitChannels []chan int
-	prot.subscribeMap.lock.Lock()
+
 	prot.rShares.mu.Lock()
+	prot.subscribeMap.lock.Lock()
 	for _, s := range needToWaitOn {
 		if prot.rShares.receivedShares[s] == nil {
 			c := make(chan int)
@@ -148,8 +149,8 @@ func (prot *Ceps) waitForShares(needToWaitOn []netpack.ShareIdentifier) {
 			waitChannels = append(waitChannels, c)
 		}
 	}
-	prot.rShares.mu.Unlock()
 	prot.subscribeMap.lock.Unlock()
+	prot.rShares.mu.Unlock()
 	for _, c := range waitChannels {
 		<-c
 	}
@@ -166,7 +167,7 @@ func (prot *Ceps) addResultShare(insResult string, value int64) {
 }
 
 func (prot *Ceps) handleShare(shares []netpack.Share) {
-	fmt.Printf("Party %v send %v\n", prot.config.VariableConfig.PartyNr, shares)
+	//fmt.Printf("Party %v send %v\n", prot.config.VariableConfig.PartyNr, shares)
 	go prot.peer.SendShares(shares)
 }
 
@@ -195,9 +196,11 @@ func (prot *Ceps) add(ins *parsing.AddInstruction) {
 }
 
 func (prot *Ceps) multiply(ins *parsing.MultInstruction) {
+
 	leftIden := prot.createWaitShareIdentifier(ins.Left)
 	rightIden := prot.createWaitShareIdentifier(ins.Right)
 	prot.waitForShares([]netpack.ShareIdentifier{leftIden, rightIden})
+	fmt.Printf("Party %v is running mult %v\n", prot.config.VariableConfig.PartyNr, ins.Num)
 	prot.rShares.mu.Lock()
 	a := prot.rShares.receivedShares[leftIden].Value
 	b := prot.rShares.receivedShares[rightIden].Value
@@ -222,11 +225,14 @@ func (prot *Ceps) multiply(ins *parsing.MultInstruction) {
 		for i := 1; i <= int(prot.config.ConstantConfig.NumberOfParties); i++ {
 			multiplicationIdentifiers = append(multiplicationIdentifiers, netpack.ShareIdentifier{Ins: "m" + strconv.Itoa(ins.Num), PartyNr: i})
 		}
+		fmt.Printf("Party %v started waiting for: %v\n", prot.config.VariableConfig.PartyNr, multiplicationIdentifiers)
 		prot.waitForShares(multiplicationIdentifiers)
+		fmt.Printf("Party %v is done wating for: %v \n", prot.config.VariableConfig.PartyNr, multiplicationIdentifiers)
 		var sharesForLagrange []netpack.Share
 		for _, i := range multiplicationIdentifiers {
 			sharesForLagrange = append(sharesForLagrange, *prot.rShares.receivedShares[i])
 		}
+		fmt.Printf("Party %v is calling lagrange with degree: %v, and shares: %v\n", prot.config.VariableConfig.PartyNr, int(prot.config.ConstantConfig.NumberOfParties-1), sharesForLagrange)
 		value, _ := prot.shamir.lagrangeInterpolation(sharesForLagrange, int(prot.config.ConstantConfig.NumberOfParties-1))
 		//Then share ab-r as the constant polynomial
 		abrShare := netpack.Share{Value: value, Identifier: abrIden}
@@ -269,7 +275,7 @@ func (prot *Ceps) outputReconstruction(finalResult string) int64 {
 	prot.fShares.finalShares = append(prot.fShares.finalShares, *resultShare)
 	prot.fShares.mu.Unlock()
 	shares := prot.waitForFinalShares()
-	fmt.Printf("Party %v is calling lagrange with degree: %v, and shares: %v\n", prot.config.VariableConfig.PartyNr, prot.degree, shares)
+	//fmt.Printf("Party %v is calling lagrange with degree: %v, and shares: %v\n", prot.config.VariableConfig.PartyNr, prot.degree, shares)
 	result, err := prot.shamir.lagrangeInterpolation(shares, prot.degree)
 	if err != nil {
 		println(err)

@@ -147,3 +147,23 @@ func TestMultipleAdd(t *testing.T) {
 		}
 	}
 }
+
+func TestMultipleMult(t *testing.T) {
+	configs := config.MakeConfigs(ip, "((p1*p1)*((p1*p1)*(p2*p2)))*((p2*p2)*(p3*p3))", []int{2, 3, 5})
+	peerlist := getXPeers(configs)
+	var channels []chan int64
+	for i, c := range configs {
+		channel := make(chan int64)
+		channels = append(channels, channel)
+		//Make protocol
+		prot := mkProtocol(c, field.MakeModPrime(43), peerlist[i])
+		go prot.goProt(channel)
+		time.Sleep(200 * time.Millisecond)
+	}
+	for i, c := range channels {
+		result := <-c
+		if result != 21 {
+			t.Errorf("Combined does not work correctly peer %v expected %v but got %v", i+1, 21, result)
+		}
+	}
+}
