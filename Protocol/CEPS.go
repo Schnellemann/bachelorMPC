@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	aux "MPC/Auxiliary"
 	config "MPC/Config"
 	field "MPC/Fields"
 	netpack "MPC/Netpackage"
@@ -26,18 +27,17 @@ type Ceps struct {
 }
 
 type subscribeMap struct {
-	m    map[netpack.ShareIdentifier]chan int
+	m    map[netpack.ShareIdentifier][]chan int
 	lock sync.Mutex
 }
 
 func (subM *subscribeMap) ping(iden netpack.ShareIdentifier) {
 	subM.lock.Lock()
-	c := subM.m[iden]
+	cList := subM.m[iden]
 	subM.lock.Unlock()
-	if c != nil {
+	for _, c := range cList {
 		c <- 1
 	}
-
 }
 
 type fShares struct {
@@ -58,7 +58,7 @@ func mkProtocol(config *config.Config, field field.Field, peer party.IPeer) *Cep
 	prot.degree = int(math.Ceil(prot.config.ConstantConfig.NumberOfParties/2) - 1)
 	prot.shamir = makeShamirSecretSharing(config.VariableConfig.Secret, field, prot.degree)
 	prot.rShares = rShares{receivedShares: make(map[netpack.ShareIdentifier]*netpack.Share)}
-	prot.subscribeMap = subscribeMap{m: make(map[netpack.ShareIdentifier]chan int)}
+	prot.subscribeMap = subscribeMap{m: make(map[netpack.ShareIdentifier][]chan int)}
 	prot.matrix = prot.createMatrix()
 	return prot
 }
@@ -139,13 +139,13 @@ func (prot *Ceps) receive() {
 
 func (prot *Ceps) waitForShares(needToWaitOn []netpack.ShareIdentifier) {
 	var waitChannels []chan int
-
+	needToWaitOn = aux.RemoveDuplicateValues(needToWaitOn)
 	prot.rShares.mu.Lock()
 	prot.subscribeMap.lock.Lock()
 	for _, s := range needToWaitOn {
 		if prot.rShares.receivedShares[s] == nil {
 			c := make(chan int)
-			prot.subscribeMap.m[s] = c
+			prot.subscribeMap.m[s] = append(prot.subscribeMap.m[s], c)
 			waitChannels = append(waitChannels, c)
 		}
 	}
