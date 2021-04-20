@@ -14,16 +14,17 @@ import (
 )
 
 type Ceps struct {
-	config        *config.Config
-	peer          party.IPeer
-	shamir        *ShamirSecretSharing
-	cMessages     chan netpack.Share
-	rShares       rShares
-	degree        int
-	fShares       fShares
-	subscribeMap  subscribeMap
-	listOfRandoms []randoms
-	matrix        [][]int64
+	config          *config.Config
+	peer            party.IPeer
+	shamir          *ShamirSecretSharing
+	cMessages       chan netpack.Share
+	rShares         rShares
+	degree          int
+	fShares         fShares
+	subscribeMap    subscribeMap
+	listOfRandoms   []randoms
+	matrix          [][]int64
+	instructionTree *parsing.InstructionTree
 }
 
 type subscribeMap struct {
@@ -63,7 +64,7 @@ func mkProtocol(config *config.Config, field field.Field, peer party.IPeer) *Cep
 	return prot
 }
 
-func (prot *Ceps) run() int64 {
+func (prot *Ceps) startNetwork() {
 	var wg sync.WaitGroup
 	//Start peer
 	wg.Add(1)
@@ -75,6 +76,22 @@ func (prot *Ceps) run() int64 {
 	//Start receiving messages from the network
 
 	go prot.receive()
+}
+
+func (prot *Ceps) calculate() int64 {
+	//Send input shares
+	toSendIdentifier := netpack.ShareIdentifier{Ins: "p" + strconv.Itoa(int(prot.config.VariableConfig.PartyNr)), PartyNr: int(prot.config.VariableConfig.PartyNr)}
+	shares := prot.shamir.makeShares(int64(prot.config.ConstantConfig.NumberOfParties), toSendIdentifier)
+	prot.handleShare(shares)
+
+	//Do instructions
+	prot.calculateInstruction(prot.instructionTree)
+
+	//output reconstruction
+	return prot.outputReconstruction(prot.instructionTree.GetResultName())
+}
+
+func (prot *Ceps) setupTree() {
 	//Convert string expression into instruction list
 	exp := prot.config.ConstantConfig.Expression
 	astExp := parsing.ParseExpression(exp)
@@ -82,20 +99,21 @@ func (prot *Ceps) run() int64 {
 	if err != nil {
 		//TODO maybe shut down peer?
 		println(err.Error())
-		return 0
+		return
 	}
-	prot.runPreprocess(instructionTree.CountMults())
-	//Send input shares
-	toSendIdentifier := netpack.ShareIdentifier{Ins: "p" + strconv.Itoa(int(prot.config.VariableConfig.PartyNr)), PartyNr: int(prot.config.VariableConfig.PartyNr)}
-	shares := prot.shamir.makeShares(int64(prot.config.ConstantConfig.NumberOfParties), toSendIdentifier)
-	prot.handleShare(shares)
+	prot.instructionTree = instructionTree
+}
 
-	//Do instructions
-	prot.calculateInstruction(instructionTree)
-
-	//output reconstruction
-	res := prot.outputReconstruction(instructionTree.GetResultName())
+func (prot *Ceps) Run() int64 {
+	prot.startNetwork()
+	prot.setupTree()
+	prot.runPreprocess()
+	res := prot.calculate()
 	return res
+}
+
+func (prot *Ceps) Destroy() {
+	//TODO
 }
 
 func (prot *Ceps) calculateInstruction(instructionTree *parsing.InstructionTree) {

@@ -20,7 +20,7 @@ func getXPeers(configList []*config.Config) []*party.Peer {
 }
 
 func (prot *Ceps) goProt(result chan int64) {
-	res := prot.run()
+	res := prot.Run()
 	result <- res
 }
 

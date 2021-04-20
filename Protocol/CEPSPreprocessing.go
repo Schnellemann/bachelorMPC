@@ -56,7 +56,8 @@ func (prot *Ceps) createRValues(fShares []*netpack.Share, gShares []*netpack.Sha
 
 }
 
-func (prot *Ceps) runPreprocess(numberOfMults int) {
+func (prot *Ceps) runPreprocess() {
+	numberOfMults := prot.instructionTree.CountMults()
 	rounds := int(math.Ceil(float64(numberOfMults) / (prot.config.ConstantConfig.NumberOfParties - float64(prot.degree))))
 	for i := 1; i <= rounds; i++ {
 		secret := prot.shamir.field.GetRandom()
