@@ -59,7 +59,6 @@ func mkProtocol(config *config.Config, field field.Field, peer party.IPeer) *Cep
 	prot.shamir = makeShamirSecretSharing(config.VariableConfig.Secret, field, prot.degree)
 	prot.rShares = rShares{receivedShares: make(map[netpack.ShareIdentifier]*netpack.Share)}
 	prot.subscribeMap = subscribeMap{m: make(map[netpack.ShareIdentifier][]chan int)}
-	prot.matrix = prot.createMatrix()
 	return prot
 }
 
