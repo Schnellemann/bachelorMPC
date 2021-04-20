@@ -5,8 +5,8 @@ import (
 	config "MPC/Config"
 	field "MPC/Fields"
 	netpack "MPC/Netpackage"
+	parsing "MPC/Parsing"
 	party "MPC/Party"
-	parsing "MPC/parsing"
 	"fmt"
 	"math"
 	"strconv"
@@ -84,7 +84,7 @@ func (prot *Ceps) run() int64 {
 		println(err.Error())
 		return 0
 	}
-	prot.runPreprocess(instructionTree.CountMults())
+	//prot.runPreprocess(instructionTree.CountMults())
 	//Send input shares
 	toSendIdentifier := netpack.ShareIdentifier{Ins: "p" + strconv.Itoa(int(prot.config.VariableConfig.PartyNr)), PartyNr: int(prot.config.VariableConfig.PartyNr)}
 	shares := prot.shamir.makeShares(int64(prot.config.ConstantConfig.NumberOfParties), toSendIdentifier)
@@ -200,56 +200,31 @@ func (prot *Ceps) multiply(ins *parsing.MultInstruction) {
 	leftIden := prot.createWaitShareIdentifier(ins.Left)
 	rightIden := prot.createWaitShareIdentifier(ins.Right)
 	prot.waitForShares([]netpack.ShareIdentifier{leftIden, rightIden})
-	fmt.Printf("Party %v is running mult %v\n", prot.config.VariableConfig.PartyNr, ins.Num)
+	//This is not the s0 value, but each party's perception of the value that they will use in the new polynomial
 	prot.rShares.mu.Lock()
-	a := prot.rShares.receivedShares[leftIden].Value
-	b := prot.rShares.receivedShares[rightIden].Value
+	leftVal := prot.rShares.receivedShares[leftIden].Value
+	rightVal := prot.rShares.receivedShares[rightIden].Value
 	prot.rShares.mu.Unlock()
-	ab2t := prot.shamir.field.Multiply(a, b)
-	if ins.Num > len(prot.listOfRandoms) {
-		fmt.Printf("Impossible - party %v did not have enough r-values for mult %v\n", prot.config.VariableConfig.PartyNr, ins.Num)
-		fmt.Printf("party %v r-values: %v\n", prot.config.VariableConfig.PartyNr, prot.listOfRandoms)
-		return
-	}
-	rPair := prot.listOfRandoms[ins.Num-1]
-	abMinusrShare := prot.shamir.field.Minus(ab2t, rPair.r2t)
-	//Send to party ins.Num mod n to distribute load
+	secretValue := prot.shamir.field.Multiply(leftVal, rightVal)
+	SSS := makeShamirSecretSharing(secretValue, prot.shamir.field, prot.degree)
 	toSendIdentifier := netpack.ShareIdentifier{Ins: "m" + strconv.Itoa(ins.Num), PartyNr: int(prot.config.VariableConfig.PartyNr)}
-	sendTo := ((ins.Num - 1) % int(prot.config.ConstantConfig.NumberOfParties)) + 1
-	prot.peer.SendShare(netpack.Share{Value: abMinusrShare, Identifier: toSendIdentifier}, sendTo)
-
-	abrIden := netpack.ShareIdentifier{Ins: "ab-r" + strconv.Itoa(ins.Num), PartyNr: sendTo}
-	if int(prot.config.VariableConfig.PartyNr) == sendTo {
-		//If I am receiver then I need to receive and compute ab-r
-		var multiplicationIdentifiers []netpack.ShareIdentifier
-		for i := 1; i <= int(prot.config.ConstantConfig.NumberOfParties); i++ {
-			multiplicationIdentifiers = append(multiplicationIdentifiers, netpack.ShareIdentifier{Ins: "m" + strconv.Itoa(ins.Num), PartyNr: i})
-		}
-		fmt.Printf("Party %v started waiting for: %v\n", prot.config.VariableConfig.PartyNr, multiplicationIdentifiers)
-		prot.waitForShares(multiplicationIdentifiers)
-		fmt.Printf("Party %v is done wating for: %v \n", prot.config.VariableConfig.PartyNr, multiplicationIdentifiers)
-		var sharesForLagrange []netpack.Share
-		for _, i := range multiplicationIdentifiers {
-			sharesForLagrange = append(sharesForLagrange, *prot.rShares.receivedShares[i])
-		}
-		fmt.Printf("Party %v is calling lagrange with degree: %v, and shares: %v\n", prot.config.VariableConfig.PartyNr, int(prot.config.ConstantConfig.NumberOfParties-1), sharesForLagrange)
-		value, _ := prot.shamir.lagrangeInterpolation(sharesForLagrange, int(prot.config.ConstantConfig.NumberOfParties-1))
-		//Then share ab-r as the constant polynomial
-		abrShare := netpack.Share{Value: value, Identifier: abrIden}
-		var abrShares []netpack.Share
-		for i := 0; i < int(prot.config.ConstantConfig.NumberOfParties); i++ {
-			abrShares = append(abrShares, abrShare)
-		}
-		prot.handleShare(abrShares)
+	shares := SSS.makeShares(int64(prot.config.ConstantConfig.NumberOfParties), toSendIdentifier)
+	prot.handleShare(shares)
+	var multiplicationIdentifiers []netpack.ShareIdentifier
+	for i := 1; i <= int(prot.config.ConstantConfig.NumberOfParties); i++ {
+		multiplicationIdentifiers = append(multiplicationIdentifiers, netpack.ShareIdentifier{Ins: "m" + strconv.Itoa(ins.Num), PartyNr: i})
 	}
-	//Wait for ab-r
-	prot.waitForShares([]netpack.ShareIdentifier{abrIden})
-	//Each party computes the share of ab_t
-	prot.rShares.mu.Lock()
-	abMinusr := prot.rShares.receivedShares[abrIden].Value
-	prot.rShares.mu.Unlock()
-	insResultValue := prot.shamir.field.Add(rPair.r1t, abMinusr)
-	prot.addResultShare(ins.Result, insResultValue)
+	prot.waitForShares(multiplicationIdentifiers)
+
+	var sharesForLagrange []netpack.Share
+	for _, i := range multiplicationIdentifiers {
+		sharesForLagrange = append(sharesForLagrange, *prot.rShares.receivedShares[i])
+	}
+
+	//Use lagrange interpolation on received shares, note that degree needs to be changed to numParties-1
+	fmt.Printf("In multiply party %v is calling lagrange with degree: %v, and shares: %v\n", prot.config.VariableConfig.PartyNr, int(prot.config.ConstantConfig.NumberOfParties-1), sharesForLagrange)
+	value, _ := SSS.lagrangeInterpolation(sharesForLagrange, int(prot.config.ConstantConfig.NumberOfParties-1))
+	prot.addResultShare(ins.Result, value)
 }
 
 func (prot *Ceps) scalar(ins *parsing.ScalarInstruction) {
