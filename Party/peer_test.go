@@ -157,7 +157,9 @@ func TestSendShares(t *testing.T) {
 	fmt.Println("Started peer 5")
 	p5.StartPeer(pChan5, &wg)
 	time.Sleep(1 * time.Second)
+	fmt.Println("Still waiting")
 	wg.Wait()
+	fmt.Println("Done waiting")
 	shares := []netpackage.Share{
 		{Value: 1, Identifier: netpackage.ShareIdentifier{Ins: "share1", PartyNr: 1}},
 		{Value: 2, Identifier: netpackage.ShareIdentifier{Ins: "share2", PartyNr: 1}},
@@ -166,12 +168,16 @@ func TestSendShares(t *testing.T) {
 		{Value: 5, Identifier: netpackage.ShareIdentifier{Ins: "share5", PartyNr: 1}},
 	}
 
-	p.SendShares(shares)
+	go p.SendShares(shares)
+	share1Res := <-pChan1
 	share2Res := <-pChan2
 	share3Res := <-pChan3
 	share4Res := <-pChan4
 	share5Res := <-pChan5
 
+	if share1Res.Value != 1 && share1Res.Identifier.Ins != "share1" {
+		t.Errorf("Wrong share recieved at peer2, should have value: %v, got: %v", 1, share2Res.Value)
+	}
 	if share2Res.Value != 2 && share2Res.Identifier.Ins != "share2" {
 		t.Errorf("Wrong share recieved at peer2, should have value: %v, got: %v", 2, share2Res.Value)
 	}
