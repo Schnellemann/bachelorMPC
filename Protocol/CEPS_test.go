@@ -19,7 +19,7 @@ func getXPeers(configList []*config.Config) []*party.Peer {
 	return peers
 }
 
-func (prot *Ceps) goProt(result chan int64) {
+func goProt(prot Prot, result chan int64) {
 	res := prot.Run()
 	result <- res
 }
@@ -33,7 +33,7 @@ func TestAdd(t *testing.T) {
 		channels = append(channels, channel)
 		//Make protocol
 		prot := mkProtocol(c, field.MakeModPrime(13), peerlist[i])
-		go prot.goProt(channel)
+		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
 	for i, c := range channels {
@@ -54,7 +54,7 @@ func TestScalar(t *testing.T) {
 		channels = append(channels, channel)
 		//Make protocol
 		prot := mkProtocol(c, field.MakeModPrime(13), peerlist[i])
-		go prot.goProt(channel)
+		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
 	for i, c := range channels {
@@ -75,7 +75,7 @@ func TestMultiply(t *testing.T) {
 		channels = append(channels, channel)
 		//Make protocol
 		prot := mkProtocol(c, field.MakeModPrime(13), peerlist[i])
-		go prot.goProt(channel)
+		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
 	for i, c := range channels {
@@ -95,7 +95,7 @@ func TestSmallMultiply(t *testing.T) {
 		channels = append(channels, channel)
 		//Make protocol
 		prot := mkProtocol(c, field.MakeModPrime(13), peerlist[i])
-		go prot.goProt(channel)
+		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
 	for i, c := range channels {
@@ -116,7 +116,7 @@ func TestCombined(t *testing.T) {
 		channels = append(channels, channel)
 		//Make protocol
 		prot := mkProtocol(c, field.MakeModPrime(43), peerlist[i])
-		go prot.goProt(channel)
+		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
 	for i, c := range channels {
@@ -137,7 +137,7 @@ func TestMultipleAdd(t *testing.T) {
 		channels = append(channels, channel)
 		//Make protocol
 		prot := mkProtocol(c, field.MakeModPrime(43), peerlist[i])
-		go prot.goProt(channel)
+		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
 	for i, c := range channels {
@@ -157,7 +157,7 @@ func TestMultipleMult(t *testing.T) {
 		channels = append(channels, channel)
 		//Make protocol
 		prot := mkProtocol(c, field.MakeModPrime(43), peerlist[i])
-		go prot.goProt(channel)
+		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
 	for i, c := range channels {
@@ -177,7 +177,7 @@ func TestMultSame(t *testing.T) {
 		channels = append(channels, channel)
 		//Make protocol
 		prot := mkProtocol(c, field.MakeModPrime(43), peerlist[i])
-		go prot.goProt(channel)
+		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
 	for i, c := range channels {
@@ -197,7 +197,7 @@ func TestMultipleMultSame(t *testing.T) {
 		channels = append(channels, channel)
 		//Make protocol
 		prot := mkProtocol(c, field.MakeModPrime(43), peerlist[i])
-		go prot.goProt(channel)
+		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
 	for i, c := range channels {
