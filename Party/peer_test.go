@@ -47,13 +47,13 @@ func TestConnections(t *testing.T) {
 	wg.Add(3)
 	fmt.Println("Started peer 1")
 	p.StartPeer(nil, &wg)
-	time.Sleep(1000 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	fmt.Println("Started peer 2")
 	p2.StartPeer(nil, &wg)
-	time.Sleep(1 * time.Second)
+	time.Sleep(100 * time.Millisecond)
 	fmt.Println("Started peer 3")
 	p3.StartPeer(nil, &wg)
-	time.Sleep(1 * time.Second)
+	time.Sleep(100 * time.Millisecond)
 	wg.Wait()
 	if len(p.peerlist.ipPorts) != 3 {
 		t.Errorf(assertEqualError(len(p.peerlist.ipPorts), 3))
@@ -101,7 +101,7 @@ func TestManyConnections(t *testing.T) {
 	for i, p := range peers {
 		fmt.Println("Started peer " + strconv.Itoa(i+1))
 		p.StartPeer(nil, &wg)
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 	wg.Wait()
 	for i, p := range peers {
@@ -144,19 +144,19 @@ func TestSendShares(t *testing.T) {
 	wg.Add(5)
 	fmt.Println("Started peer 1")
 	p.StartPeer(pChan1, &wg)
-	time.Sleep(1000 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	fmt.Println("Started peer 2")
 	p2.StartPeer(pChan2, &wg)
-	time.Sleep(1 * time.Second)
+	time.Sleep(100 * time.Millisecond)
 	fmt.Println("Started peer 3")
 	p3.StartPeer(pChan3, &wg)
-	time.Sleep(1 * time.Second)
+	time.Sleep(100 * time.Millisecond)
 	fmt.Println("Started peer 4")
 	p4.StartPeer(pChan4, &wg)
-	time.Sleep(1 * time.Second)
+	time.Sleep(100 * time.Millisecond)
 	fmt.Println("Started peer 5")
 	p5.StartPeer(pChan5, &wg)
-	time.Sleep(1 * time.Second)
+	time.Sleep(100 * time.Millisecond)
 	fmt.Println("Still waiting")
 	wg.Wait()
 	fmt.Println("Done waiting")
@@ -205,28 +205,29 @@ func TestPeerlists(t *testing.T) {
 	/*
 		Make the peers
 	*/
-	configs := config.ReadConfig(filepath)
-	conf := &configs[0]
-	conf2 := &configs[1]
-	conf3 := &configs[2]
+	configs := config.MakeConfigs("127.0.1.1", "", []int{1, 2, 3})
+	conf := configs[0]
+	conf2 := configs[1]
+	conf3 := configs[2]
 	p := MkPeer(conf)
 	p2 := MkPeer(conf2)
 	p3 := MkPeer(conf3)
-
+	pChan1 := make(chan netpackage.Share)
+	pChan2 := make(chan netpackage.Share)
+	pChan3 := make(chan netpackage.Share)
 	/*
 		Connect them
 	*/
 	var wg sync.WaitGroup
 	wg.Add(3)
-	p.StartPeer(nil, &wg)
-	time.Sleep(3 * time.Second)
-	p2.StartPeer(nil, &wg)
-	time.Sleep(3 * time.Second)
-	p3.StartPeer(nil, &wg)
-	time.Sleep(3 * time.Second)
+	p.StartPeer(pChan1, &wg)
+	time.Sleep(100 * time.Millisecond)
+	p2.StartPeer(pChan2, &wg)
+	time.Sleep(100 * time.Millisecond)
+	p3.StartPeer(pChan3, &wg)
 	wg.Wait()
-	peers := []Peer{*p, *p2, *p3}
-	shouldHold := []string{"127.0.1.1:40002", "127.0.1.1:6970", "127.0.1.1:6971"}
+	peers := []*Peer{p, p2, p3}
+	shouldHold := []string{"127.0.1.1:40000", "127.0.1.1:40010", "127.0.1.1:40020"}
 
 	for i := 0; i < 3; i++ {
 		for _, j := range shouldHold {
