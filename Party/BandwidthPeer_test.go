@@ -23,11 +23,11 @@ func TestBandwidthConstraint(t *testing.T) {
 	peer4 := MkPeer(conf4)
 	peer5 := MkPeer(conf5)
 
-	p := MkBandwidthPeer(conf, peer, 10, time.Millisecond)
-	p2 := MkBandwidthPeer(conf2, peer2, 10, time.Millisecond)
-	p3 := MkBandwidthPeer(conf3, peer3, 10, time.Millisecond)
-	p4 := MkBandwidthPeer(conf4, peer4, 10, time.Millisecond)
-	p5 := MkBandwidthPeer(conf5, peer5, 10, time.Millisecond)
+	p := MkBandwidthPeer(conf, peer, 10, 10*time.Millisecond)
+	p2 := MkBandwidthPeer(conf2, peer2, 10, 10*time.Millisecond)
+	p3 := MkBandwidthPeer(conf3, peer3, 10, 10*time.Millisecond)
+	p4 := MkBandwidthPeer(conf4, peer4, 10, 10*time.Millisecond)
+	p5 := MkBandwidthPeer(conf5, peer5, 10, 10*time.Millisecond)
 	/*
 		Make channels for message
 	*/
@@ -75,7 +75,7 @@ func TestBandwidthConstraint(t *testing.T) {
 	<-pChan5
 	endSend := time.Now()
 	timeToSend := endSend.Sub(startSend)
-	if (timeToSend) < 200*time.Millisecond {
+	if (timeToSend) < 190*time.Millisecond {
 		t.Errorf("The sending of the message was too fast, got %v", timeToSend)
 	}
 }

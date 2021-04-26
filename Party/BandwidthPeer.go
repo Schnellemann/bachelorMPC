@@ -21,6 +21,9 @@ type BandwidthPeer struct {
 
 func MkBandwidthPeer(config *config.Config, Peer IPeer, width int, penalty time.Duration) *BandwidthPeer {
 	bp := new(BandwidthPeer)
+	bp.RecieveChannel = make(chan netpack.Share)
+	bp.penalty = penalty
+	bp.width = width
 	bp.Peer = Peer
 	return bp
 }
