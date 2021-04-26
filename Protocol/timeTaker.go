@@ -2,20 +2,37 @@ package protocol
 
 import (
 	config "MPC/Config"
-	"log"
 	"time"
 )
 
+type Times struct {
+	Network    time.Duration
+	Calculate  time.Duration
+	SetupTree  time.Duration
+	Preprocess time.Duration
+	Run        time.Duration
+}
+
+func mkTimes() *Times {
+	t := new(Times)
+	t.Network = 0
+	t.Calculate = 0
+	t.SetupTree = 0
+	t.Preprocess = 0
+	t.Run = 0
+	return t
+}
+
 type TimeMeasuring struct {
 	prot   Prot
-	log    *log.Logger
+	timer  Times
 	config *config.Config
 }
 
-func mkTimeMeasuringProt(prot Prot, config *config.Config, log *log.Logger) *TimeMeasuring {
+func mkTimeMeasuringProt(prot Prot, config *config.Config) *TimeMeasuring {
 	tm := new(TimeMeasuring)
 	tm.prot = prot
-	tm.log = log
+	tm.timer = *mkTimes()
 	tm.config = config
 	return tm
 }
@@ -24,13 +41,15 @@ func (tM *TimeMeasuring) startNetwork() {
 	startTime := time.Now()
 	tM.prot.startNetwork()
 	endTime := time.Now()
-	log.Printf("Starting the network for party %v took %v.\n", tM.config.VariableConfig.PartyNr, endTime.Sub(startTime))
+	tM.timer.Network = endTime.Sub(startTime)
+	//log.Printf("Starting the network for party %v took %v.\n", tM.config.VariableConfig.PartyNr, endTime.Sub(startTime))
 }
 func (tM *TimeMeasuring) calculate() int64 {
 	startTime := time.Now()
 	res := tM.prot.calculate()
 	endTime := time.Now()
-	log.Printf("Calculating instructions for party %v took %v.\n", tM.config.VariableConfig.PartyNr, endTime.Sub(startTime))
+	tM.timer.Calculate = endTime.Sub(startTime)
+	//log.Printf("Calculating instructions for party %v took %v.\n", tM.config.VariableConfig.PartyNr, endTime.Sub(startTime))
 	return res
 }
 
@@ -38,14 +57,16 @@ func (tM *TimeMeasuring) setupTree() {
 	startTime := time.Now()
 	tM.prot.setupTree()
 	endTime := time.Now()
-	log.Printf("Parsing the instructions tree for party %v took %v.\n", tM.config.VariableConfig.PartyNr, endTime.Sub(startTime))
+	tM.timer.SetupTree = endTime.Sub(startTime)
+	//log.Printf("Parsing the instructions tree for party %v took %v.\n", tM.config.VariableConfig.PartyNr, endTime.Sub(startTime))
 
 }
 func (tM *TimeMeasuring) runPreprocess() {
 	startTime := time.Now()
 	tM.prot.runPreprocess()
 	endTime := time.Now()
-	log.Printf("Running preprocess for party %v took %v.\n", tM.config.VariableConfig.PartyNr, endTime.Sub(startTime))
+	tM.timer.Preprocess = endTime.Sub(startTime)
+	//log.Printf("Running preprocess for party %v took %v.\n", tM.config.VariableConfig.PartyNr, endTime.Sub(startTime))
 
 }
 func (tM *TimeMeasuring) Run() int64 {
@@ -55,7 +76,8 @@ func (tM *TimeMeasuring) Run() int64 {
 	tM.runPreprocess()
 	res := tM.calculate()
 	endTime := time.Now()
-	log.Printf("Running the full protocol for party %v took %v.\n", tM.config.VariableConfig.PartyNr, endTime.Sub(startTime))
+	tM.timer.Run = endTime.Sub(startTime)
+	//log.Printf("Running the full protocol for party %v took %v.\n", tM.config.VariableConfig.PartyNr, endTime.Sub(startTime))
 	return res
 }
 func (tM *TimeMeasuring) Destroy() {

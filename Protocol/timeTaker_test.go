@@ -3,14 +3,12 @@ package protocol
 import (
 	config "MPC/Config"
 	field "MPC/Fields"
-	"log"
-	"os"
 	"testing"
 	"time"
 )
 
 func TestTimeTaker(t *testing.T) {
-	l := log.New(os.Stdout, "TestTimeTaker> ", log.LstdFlags)
+	//l := log.New(os.Stdout, "TestTimeTaker> ", log.LstdFlags)
 	configs := config.MakeConfigs(ip, "((p1*p1)*((p1*p1)*(p2*p2)))*((p2*p2)*(p3*p3))", []int{2, 3, 5})
 	peerlist := getXPeers(configs)
 	var channels []chan int64
@@ -19,7 +17,7 @@ func TestTimeTaker(t *testing.T) {
 		channels = append(channels, channel)
 		//Make protocol
 		prot := mkProtocol(c, field.MakeModPrime(43), peerlist[i])
-		tprot := mkTimeMeasuringProt(prot, c, l)
+		tprot := mkTimeMeasuringProt(prot, c)
 		go goProt(tprot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
