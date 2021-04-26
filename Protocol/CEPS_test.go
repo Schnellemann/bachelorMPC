@@ -32,7 +32,7 @@ func TestAdd(t *testing.T) {
 		channel := make(chan int64)
 		channels = append(channels, channel)
 		//Make protocol
-		prot := mkProtocol(c, field.MakeModPrime(13), peerlist[i])
+		prot := MkProtocol(c, field.MakeModPrime(13), peerlist[i])
 		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
@@ -53,7 +53,7 @@ func TestScalar(t *testing.T) {
 		channel := make(chan int64)
 		channels = append(channels, channel)
 		//Make protocol
-		prot := mkProtocol(c, field.MakeModPrime(13), peerlist[i])
+		prot := MkProtocol(c, field.MakeModPrime(13), peerlist[i])
 		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
@@ -74,7 +74,7 @@ func TestMultiply(t *testing.T) {
 		channel := make(chan int64)
 		channels = append(channels, channel)
 		//Make protocol
-		prot := mkProtocol(c, field.MakeModPrime(13), peerlist[i])
+		prot := MkProtocol(c, field.MakeModPrime(13), peerlist[i])
 		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
@@ -94,7 +94,7 @@ func TestSmallMultiply(t *testing.T) {
 		channel := make(chan int64)
 		channels = append(channels, channel)
 		//Make protocol
-		prot := mkProtocol(c, field.MakeModPrime(13), peerlist[i])
+		prot := MkProtocol(c, field.MakeModPrime(13), peerlist[i])
 		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
@@ -115,7 +115,7 @@ func TestCombined(t *testing.T) {
 		channel := make(chan int64)
 		channels = append(channels, channel)
 		//Make protocol
-		prot := mkProtocol(c, field.MakeModPrime(43), peerlist[i])
+		prot := MkProtocol(c, field.MakeModPrime(43), peerlist[i])
 		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
@@ -136,7 +136,7 @@ func TestMultipleAdd(t *testing.T) {
 		channel := make(chan int64)
 		channels = append(channels, channel)
 		//Make protocol
-		prot := mkProtocol(c, field.MakeModPrime(43), peerlist[i])
+		prot := MkProtocol(c, field.MakeModPrime(43), peerlist[i])
 		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
@@ -156,7 +156,7 @@ func TestMultipleMult(t *testing.T) {
 		channel := make(chan int64)
 		channels = append(channels, channel)
 		//Make protocol
-		prot := mkProtocol(c, field.MakeModPrime(43), peerlist[i])
+		prot := MkProtocol(c, field.MakeModPrime(43), peerlist[i])
 		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
@@ -176,7 +176,7 @@ func TestMultSame(t *testing.T) {
 		channel := make(chan int64)
 		channels = append(channels, channel)
 		//Make protocol
-		prot := mkProtocol(c, field.MakeModPrime(43), peerlist[i])
+		prot := MkProtocol(c, field.MakeModPrime(43), peerlist[i])
 		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
@@ -196,7 +196,7 @@ func TestMultipleMultSame(t *testing.T) {
 		channel := make(chan int64)
 		channels = append(channels, channel)
 		//Make protocol
-		prot := mkProtocol(c, field.MakeModPrime(43), peerlist[i])
+		prot := MkProtocol(c, field.MakeModPrime(43), peerlist[i])
 		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}

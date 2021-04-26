@@ -29,7 +29,7 @@ type TimeMeasuring struct {
 	config *config.Config
 }
 
-func mkTimeMeasuringProt(prot Prot, config *config.Config) *TimeMeasuring {
+func MkTimeMeasuringProt(prot Prot, config *config.Config) *TimeMeasuring {
 	tm := new(TimeMeasuring)
 	tm.prot = prot
 	tm.timer = *mkTimes()

@@ -14,7 +14,7 @@ func TestCreateMatrix(t *testing.T) {
 	configs := config.MakeConfigs(ip, "p1+p2+p3", []int{4, 3, 3})
 	peerlist := getXPeers(configs)
 	//Make protocol
-	prot := mkProtocol(configs[0], field.MakeModPrime(11), peerlist[0])
+	prot := MkProtocol(configs[0], field.MakeModPrime(11), peerlist[0])
 	n := int(prot.config.ConstantConfig.NumberOfParties)
 	m := n - prot.degree
 
