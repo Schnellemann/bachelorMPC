@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
+	exp "MPC/Experiment"
 )
 
 func main() {
-	fmt.Println("Hello")
+	exp.IncPeers()
 }

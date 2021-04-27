@@ -60,7 +60,7 @@ func makeRandomSecretList(nrOfParties int, field int) []int {
 //=========================================================| Fast Experiments |==============================================================================================
 
 //Increment peers
-func incPeers() {
+func IncPeers() {
 	fieldRange := 13
 	var xyList []graph.XY
 	for i := 3; i < 100; i += 10 {
