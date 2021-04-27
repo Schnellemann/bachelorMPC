@@ -394,6 +394,7 @@ MigrationBackup/
 # Non generated
 
 # Png files for graphs created
-*.Png
+*.png
 
 # Tex files for graphs created
+*.tex
