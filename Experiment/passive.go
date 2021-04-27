@@ -3,8 +3,10 @@ package experiment
 import (
 	config "MPC/Config"
 	field "MPC/Fields"
+	graph "MPC/Graph"
 	party "MPC/Party"
 	prot "MPC/Protocol"
+
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -12,10 +14,6 @@ import (
 )
 
 var ip string = "127.0.1.1"
-
-type XY struct {
-	X, Y float64
-}
 
 func getXPeers(configList []*config.Config) []*party.Peer {
 	var peers []*party.Peer
@@ -59,9 +57,12 @@ func makeRandomSecretList(nrOfParties int, field int) []int {
 	return secretList
 }
 
+//=========================================================| Fast Experiments |==============================================================================================
+
 //Increment peers
 func incPeers() {
 	fieldRange := 13
+	var xyList []graph.XY
 	for i := 3; i < 100; i += 10 {
 		secretList := makeRandomSecretList(i, fieldRange)
 		expression := makeRandomMultExpression(len(secretList), 20)
@@ -76,7 +77,10 @@ func incPeers() {
 			p := prot.MkProtocol(c, field.MakeModPrime(int64(fieldRange)), peerlist[i])
 			tprot := prot.MkTimeMeasuringProt(p, c)
 			go goProt(tprot, channel)
-			//timeStruct := tprot.Timer
+			timeStruct := tprot.Timer
+			//Only count calculate and preprocessing for the experiment TODO: maybe some others?
+			y := timeStruct.Calculate + timeStruct.Preprocess
+			xyList = append(xyList, graph.XY{float64(i), float64(y)})
 			//TODO how does Jens want the times????
 			time.Sleep(200 * time.Millisecond)
 		}
@@ -91,6 +95,7 @@ func incPeers() {
 			fmt.Println("Peers do not agree on the result")
 		}
 	}
+	graph.PlotGraph("increment Peers", xyList, "Jens er dum", "png")
 }
 
 //Increment add or scalar instructions
@@ -271,3 +276,5 @@ func incDelay() {
 //Increment multiplication, bandwidth and delay
 
 //Increment bandwidth and delay
+
+//=========================================================| Slow Experiments |==============================================================================================

@@ -9,6 +9,10 @@ import (
 	"gonum.org/v1/plot/plotter"
 )
 
+type XY struct {
+	X, Y float64
+}
+
 func convertToPlotFormat(xys []experiment.XY) plotter.XYs {
 	fXY := make(plotter.XYs, len(xys))
 	for i, xy := range xys {
@@ -18,7 +22,7 @@ func convertToPlotFormat(xys []experiment.XY) plotter.XYs {
 	return fXY
 }
 
-func plotGraph(fileName string, xy []experiment.XY, title string, format string) error {
+func PlotGraph(fileName string, xy []XY, title string, format string) error {
 	filePath := fileName + "." + format
 
 	f, err := os.Create(filePath)
