@@ -390,3 +390,10 @@ MigrationBackup/
 .ionide/
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio,visualstudiocode,go
+
+# Non generated
+
+# Png files for graphs created
+*.Png
+
+# Tex files for graphs created
