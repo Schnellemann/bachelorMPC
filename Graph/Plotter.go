@@ -1,15 +1,24 @@
 package graph
 
 import (
+	experiment "MPC/Experiment"
 	"fmt"
 	"os"
-	"time"
 
 	plot "gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
 )
 
-func plotGraph(fileName string, Xdata []int, Ydata []time.Duration, title string, format string) error {
+func convertToPlotFormat(xys []experiment.XY) plotter.XYs {
+	fXY := make(plotter.XYs, len(xys))
+	for i, xy := range xys {
+		fXY[i].X = xy.X
+		fXY[i].Y = xy.Y
+	}
+	return fXY
+}
+
+func plotGraph(fileName string, xy []experiment.XY, title string, format string) error {
 	filePath := fileName + "." + format
 
 	f, err := os.Create(filePath)
@@ -19,9 +28,7 @@ func plotGraph(fileName string, Xdata []int, Ydata []time.Duration, title string
 	defer f.Close()
 	p := plot.New()
 
-	scatter, _ := plotter.NewScatter(plotter.XYs{
-		{0, 0}, {0.5, 0.5}, {1, 1},
-	})
+	scatter, _ := plotter.NewScatter(convertToPlotFormat(xy))
 	p.Add(scatter)
 
 	wt, err := p.WriterTo(512, 512, format)

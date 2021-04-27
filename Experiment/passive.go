@@ -13,9 +13,8 @@ import (
 
 var ip string = "127.0.1.1"
 
-type plot struct {
-	x int
-	y int
+type XY struct {
+	X, Y float64
 }
 
 func getXPeers(configList []*config.Config) []*party.Peer {
@@ -77,7 +76,7 @@ func incPeers() {
 			p := prot.MkProtocol(c, field.MakeModPrime(int64(fieldRange)), peerlist[i])
 			tprot := prot.MkTimeMeasuringProt(p, c)
 			go goProt(tprot, channel)
-			timeStruct := tprot.Timer
+			//timeStruct := tprot.Timer
 			//TODO how does Jens want the times????
 			time.Sleep(200 * time.Millisecond)
 		}
@@ -113,7 +112,7 @@ func incMult() {
 			p := prot.MkProtocol(c, field.MakeModPrime(int64(fieldRange)), peerlist[i])
 			tprot := prot.MkTimeMeasuringProt(p, c)
 			go goProt(tprot, channel)
-			timeStruct := tprot.Timer
+			//timeStruct := tprot.Timer
 			//TODO how does Jens want the times????
 			time.Sleep(200 * time.Millisecond)
 		}
@@ -154,7 +153,7 @@ func incBandwidth() {
 			p := prot.MkProtocol(c, field.MakeModPrime(int64(fieldRange)), bandwidthPeerlist[i])
 			tprot := prot.MkTimeMeasuringProt(p, c)
 			go goProt(tprot, channel)
-			timeStruct := tprot.Timer
+			//timeStruct := tprot.Timer
 			//TODO how does Jens want the times????
 			time.Sleep(200 * time.Millisecond)
 		}
@@ -194,7 +193,7 @@ func incBandwidthPunish() {
 			p := prot.MkProtocol(c, field.MakeModPrime(int64(fieldRange)), bandwidthPeerlist[i])
 			tprot := prot.MkTimeMeasuringProt(p, c)
 			go goProt(tprot, channel)
-			timeStruct := tprot.Timer
+			//timeStruct := tprot.Timer
 			//TODO how does Jens want the times????
 			time.Sleep(200 * time.Millisecond)
 		}
@@ -236,7 +235,7 @@ func incDelay() {
 			p := prot.MkProtocol(c, field.MakeModPrime(int64(fieldRange)), bandwidthPeerlist[i])
 			tprot := prot.MkTimeMeasuringProt(p, c)
 			go goProt(tprot, channel)
-			timeStruct := tprot.Timer
+			//timeStruct := tprot.Timer
 			//TODO how does Jens want the times????
 			time.Sleep(200 * time.Millisecond)
 		}
