@@ -16,8 +16,8 @@ func TestTimeTaker(t *testing.T) {
 		channel := make(chan int64)
 		channels = append(channels, channel)
 		//Make protocol
-		prot := mkProtocol(c, field.MakeModPrime(43), peerlist[i])
-		tprot := mkTimeMeasuringProt(prot, c)
+		prot := MkProtocol(c, field.MakeModPrime(43), peerlist[i])
+		tprot := MkTimeMeasuringProt(prot, c)
 		go goProt(tprot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}

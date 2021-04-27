@@ -51,7 +51,7 @@ type rShares struct {
 	mu             sync.Mutex
 }
 
-func mkProtocol(config *config.Config, field field.Field, peer party.IPeer) *Ceps {
+func MkProtocol(config *config.Config, field field.Field, peer party.IPeer) *Ceps {
 	prot := new(Ceps)
 	prot.cMessages = make(chan netpack.Share)
 	prot.config = config
