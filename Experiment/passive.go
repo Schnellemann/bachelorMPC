@@ -39,10 +39,10 @@ func allSameResults(a []int) bool {
 }
 
 func makeRandomMultExpression(nrOfPeers int, nrOfMultiplication int) string {
-	expression := ""
+	expression := "p" + strconv.Itoa(rand.Intn(nrOfPeers)+1)
 	for i := 0; i < nrOfMultiplication; i++ {
 		peerNr := rand.Intn(nrOfPeers) + 1
-		expression += "p" + strconv.Itoa(peerNr)
+		expression += "*p" + strconv.Itoa(peerNr)
 	}
 
 	return expression

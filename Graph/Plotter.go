@@ -1,7 +1,6 @@
 package graph
 
 import (
-	experiment "MPC/Experiment"
 	"fmt"
 	"os"
 
@@ -13,7 +12,7 @@ type XY struct {
 	X, Y float64
 }
 
-func convertToPlotFormat(xys []experiment.XY) plotter.XYs {
+func convertToPlotFormat(xys []XY) plotter.XYs {
 	fXY := make(plotter.XYs, len(xys))
 	for i, xy := range xys {
 		fXY[i].X = xy.X
