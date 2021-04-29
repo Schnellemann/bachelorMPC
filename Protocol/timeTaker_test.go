@@ -15,9 +15,10 @@ func TestTimeTaker(t *testing.T) {
 	for i, c := range configs {
 		channel := make(chan int64)
 		channels = append(channels, channel)
+		times := new(Times)
 		//Make protocol
 		prot := MkProtocol(c, field.MakeModPrime(43), peerlist[i])
-		tprot := MkTimeMeasuringProt(prot, c)
+		tprot := MkTimeMeasuringProt(prot, c, times)
 		go goProt(tprot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
