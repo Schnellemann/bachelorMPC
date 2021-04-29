@@ -6,6 +6,7 @@ import (
 	netpack "MPC/Netpackage"
 	"encoding/gob"
 	"fmt"
+	"io"
 	"net"
 	"sync"
 )
@@ -140,9 +141,8 @@ func (p *Peer) broadcastPeer(ipPort string) {
 func (p *Peer) write(encoder *gob.Encoder, pack *netpack.NetPackage) {
 	err := encoder.Encode(pack)
 	if err != nil {
-		fmt.Println("Could not encode transaction trying again")
+		fmt.Println("Could not encode transaction")
 		fmt.Println(err)
-		p.write(encoder, pack)
 	}
 }
 
@@ -195,9 +195,13 @@ func (p *Peer) handleConnection(dec *gob.Decoder) {
 		receivedPackage := &netpack.NetPackage{}
 		err := dec.Decode(receivedPackage)
 		if err != nil {
-			fmt.Println("Could not decode package from peer")
-			fmt.Println(err)
-			continue
+			if err == io.EOF {
+				return
+			} else {
+				fmt.Println("Could not decode package from peer")
+				fmt.Println(err)
+				return
+			}
 		} else {
 			//If we receive IpPorts we should ignore it, we handle this
 			//Only if we're actually waiting for the peerlist
@@ -224,7 +228,7 @@ func (p *Peer) addEntryDecoderMap(decoder *gob.Decoder, conTuble *ConnectionTupl
 }
 
 func (p *Peer) connectToPeers() {
-	fmt.Printf("Peerlist at connect to Peers %v\n", p.peerlist.ipPorts)
+	//fmt.Printf("Peerlist at connect to Peers %v\n", p.peerlist.ipPorts)
 	for _, ip := range p.peerlist.ipPorts {
 		//Make sure you don't connect to the initial peer again
 		if ip != p.config.VariableConfig.ConnectIpPort && ip != p.config.VariableConfig.ListenIpPort {
@@ -247,8 +251,8 @@ func (p *Peer) listenForConnections(totalPeers int, listenOnAddress string) {
 		return
 	}
 	defer li.Close()
-	fmt.Println("Other peers can connect to me on the following ip:port")
-	fmt.Println("Address " + ": " + p.config.VariableConfig.ListenIpPort)
+	//fmt.Println("Other peers can connect to me on the following ip:port")
+	//fmt.Println("Address " + ": " + p.config.VariableConfig.ListenIpPort)
 	p.connections.lock.Lock()
 	i := len(p.connections.c) + 1
 	p.connections.lock.Unlock()

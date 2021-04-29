@@ -64,6 +64,7 @@ func IncPeers() {
 	fieldRange := 13
 	var xyList []graph.XY
 	for i := 3; i < 100; i += 10 {
+		fmt.Printf("Starting Experiment with %v peers. \n", i)
 		secretList := makeRandomSecretList(i, fieldRange)
 		expression := makeRandomMultExpression(len(secretList), 20)
 
@@ -80,7 +81,7 @@ func IncPeers() {
 			timeStruct := tprot.Timer
 			//Only count calculate and preprocessing for the experiment TODO: maybe some others?
 			y := timeStruct.Calculate + timeStruct.Preprocess
-			xyList = append(xyList, graph.XY{float64(i), float64(y)})
+			xyList = append(xyList, graph.XY{X: float64(i), Y: float64(y)})
 			//TODO how does Jens want the times????
 			time.Sleep(200 * time.Millisecond)
 		}
@@ -93,9 +94,10 @@ func IncPeers() {
 		}
 		if !allSameResults(resultList) {
 			fmt.Println("Peers do not agree on the result")
+			fmt.Printf("Result: %v \n", resultList)
 		}
 	}
-	graph.PlotGraph("increment Peers", xyList, "Jens er dum", "png")
+	graph.PlotGraph("increment Peers", xyList, "IncPeers", "png")
 }
 
 //Increment add or scalar instructions

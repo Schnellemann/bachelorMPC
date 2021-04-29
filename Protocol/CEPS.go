@@ -36,7 +36,7 @@ func (subM *subscribeMap) ping(iden netpack.ShareIdentifier) {
 	subM.lock.Lock()
 	wgList := subM.m[iden]
 	subM.lock.Unlock()
-	fmt.Printf("Pinging %v\n", iden)
+	//fmt.Printf("Pinging %v\n", iden)
 	for _, wg := range wgList {
 		wg.Done()
 	}
@@ -170,7 +170,7 @@ func (prot *Ceps) waitForShares(needToWaitOn []netpack.ShareIdentifier) {
 	prot.subscribeMap.lock.Unlock()
 	prot.rShares.mu.Unlock()
 	wg.Wait()
-	fmt.Printf("Party %v done waiting for %v\n", prot.config.VariableConfig.PartyNr, needToWaitOn)
+	//fmt.Printf("Party %v done waiting for %v\n", prot.config.VariableConfig.PartyNr, needToWaitOn)
 }
 
 func (prot *Ceps) addResultShare(insResult string, value int64) {
