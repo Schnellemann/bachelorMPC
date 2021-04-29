@@ -293,7 +293,7 @@ func (prot *Ceps) outputReconstruction(finalResult string) int64 {
 	//fmt.Printf("Party %v is calling lagrange with degree: %v, and shares: %v\n", prot.config.VariableConfig.PartyNr, prot.degree, shares)
 	result, err := prot.shamir.lagrangeInterpolation(shares, prot.degree)
 	if err != nil {
-		println(err)
+		println(err.Error())
 		return 0
 	}
 	return result

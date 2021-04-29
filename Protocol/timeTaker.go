@@ -13,26 +13,16 @@ type Times struct {
 	Run        time.Duration
 }
 
-func mkTimes() *Times {
-	t := new(Times)
-	t.Network = 0
-	t.Calculate = 0
-	t.SetupTree = 0
-	t.Preprocess = 0
-	t.Run = 0
-	return t
-}
-
 type TimeMeasuring struct {
 	prot   Prot
-	Timer  Times
+	Timer  *Times
 	config *config.Config
 }
 
-func MkTimeMeasuringProt(prot Prot, config *config.Config) *TimeMeasuring {
+func MkTimeMeasuringProt(prot Prot, config *config.Config, timer *Times) *TimeMeasuring {
 	tm := new(TimeMeasuring)
 	tm.prot = prot
-	tm.Timer = *mkTimes()
+	tm.Timer = timer
 	tm.config = config
 	return tm
 }
