@@ -156,7 +156,7 @@ func TestLeftSubTree(t *testing.T) {
 		channel := make(chan int64)
 		channels = append(channels, channel)
 		//Make protocol
-		prot := mkProtocol(c, field.MakeModPrime(43), peerlist[i])
+		prot := MkProtocol(c, field.MakeModPrime(43), peerlist[i])
 		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
@@ -176,7 +176,7 @@ func TestRightSubTree(t *testing.T) {
 		channel := make(chan int64)
 		channels = append(channels, channel)
 		//Make protocol
-		prot := mkProtocol(c, field.MakeModPrime(43), peerlist[i])
+		prot := MkProtocol(c, field.MakeModPrime(43), peerlist[i])
 		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
@@ -216,7 +216,7 @@ func TestMultipleMult2(t *testing.T) {
 		channel := make(chan int64)
 		channels = append(channels, channel)
 		//Make protocol
-		prot := mkProtocol(c, field.MakeModPrime(43), peerlist[i])
+		prot := MkProtocol(c, field.MakeModPrime(43), peerlist[i])
 		go goProt(prot, channel)
 		time.Sleep(200 * time.Millisecond)
 	}
