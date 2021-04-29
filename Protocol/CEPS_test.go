@@ -267,3 +267,30 @@ func TestMultipleMultSame(t *testing.T) {
 		}
 	}
 }
+
+func Test33Mult(t *testing.T) {
+	//
+	var secrets = []int{510, 691, 545, 1005, 911, 194, 675, 803, 195, 162, 233, 629, 204, 990, 159, 709, 845, 285,
+		736, 344, 300, 394, 1030, 1012, 799, 439, 921, 936, 158, 500, 990, 384, 278}
+	// 158 * 285 * 921 * 510 * 162 * 799 * 159 * 439 * 691 * 285 * 500 * 921 * 921 * 285 * 500 * 158 * 1030 * 911 * 384 * 1012 * 691
+	configs := config.MakeConfigs(ip, "p29*p18*p27*p1*p10*p25*p15*p26*p2*p18*p30*p27*p27*p18*p30*p29*p23*p5*p32*p24*p2", secrets)
+	peerlist := getXPeers(configs)
+	var channels []chan int64
+	for i, c := range configs {
+		channel := make(chan int64)
+		channels = append(channels, channel)
+		//Make protocol
+		prot := MkProtocol(c, field.MakeModPrime(1049), peerlist[i])
+		go goProt(prot, channel)
+		time.Sleep(200 * time.Millisecond)
+	}
+	for i, c := range channels {
+		result := <-c
+		if result != 298 {
+			t.Errorf("Wrong result expected %v, but got %v at party: %v \n", 298, result, i+1)
+		}
+	}
+}
+
+// p29*p18*p27*p1*p10*p25*p15*p26*p2*p18*p30*p27*p27*p18*p30*p29*p23*p5*p32*p24*p2
+// 510 691 545 1005 911 194 675 803 195 162 233 629 204 990 159 709 845 285 736 344 300 394 1030 1012 799 439 921 936 158 500 990 384 278
