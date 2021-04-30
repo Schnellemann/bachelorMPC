@@ -61,9 +61,9 @@ func makeRandomSecretList(nrOfParties int, field int) []int {
 
 //Increment peers
 func IncPeers() {
-	fieldRange := 97
+	fieldRange := 1049
 	var xyList []graph.XY
-	for i := 47; i < 50; i += 10 {
+	for i := 3; i < 60; i += 10 {
 		fmt.Printf("Starting Experiment with %v peers. \n", i)
 		secretList := makeRandomSecretList(i, fieldRange)
 		expression := makeRandomMultExpression(len(secretList), 20)

@@ -2,7 +2,6 @@ package fields
 
 import (
 	"crypto/rand"
-	"math"
 	"math/big"
 )
 
@@ -60,7 +59,12 @@ func (mp ModPrime) Neg(a int64) int64 {
 }
 
 func (mp ModPrime) Pow(a int64, b int64) int64 {
-	return int64(math.Pow(float64(a), float64(b))) % mp.p
+	bigP := big.NewInt(mp.p)
+	bigA := big.NewInt(a)
+	bigB := big.NewInt(b)
+	z := big.NewInt(0)
+	z.Exp(bigA, bigB, bigP)
+	return mp.Convert(z.Int64())
 }
 
 func (mp ModPrime) GetRandom() int64 {
