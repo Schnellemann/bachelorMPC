@@ -1,13 +1,22 @@
 package graph
 
 import (
+	prot "MPC/Protocol"
 	"testing"
+	"time"
 )
 
 func TestPlotting(t *testing.T) {
-	xy := []XY{{1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}, {6, 6}, {7, 7}, {8, 8}, {9, 9}, {10, 10}}
-
-	err := PlotGraph("test", xy, "Test", "png")
+	graph := MkPlotter("png")
+	timer := new(prot.Times)
+	timer.Calculate = time.Minute + 2*time.Second
+	timer.Network = 5 * time.Second
+	timer.Preprocess = 0
+	timer.SetupTree = 10 * time.Millisecond
+	graph.AddData(1, timer)
+	graph.AddData(2, timer)
+	graph.AddData(10, timer)
+	err := graph.Plot("Test", "testVariable")
 	if err != nil {
 		t.Errorf("Failed the test with the error %v", err)
 	}
