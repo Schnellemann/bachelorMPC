@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	path := "Config/configFiles/" + "kaare" + ".json"
+	path := "Config\\configFiles\\" + "kaare" + ".json"
 	config := &config.ReadConfig(path)[0]
 	field := field.MakeModPrime(1049)
 	peer := p.MkPeer(config)
