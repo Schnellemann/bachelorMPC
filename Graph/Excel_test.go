@@ -7,7 +7,7 @@ import (
 )
 
 func TestExcel(t *testing.T) {
-	graph := createExcel()
+	graph := MkExcel()
 	timer := new(prot.Times)
 	timer.Calculate = time.Minute + 2*time.Second
 	timer.Network = 5 * time.Second

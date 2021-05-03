@@ -85,7 +85,6 @@ func IncPeers(plotter graph.Interface) {
 			go goProt(tprot, channel)
 			time.Sleep(100 * time.Millisecond)
 		}
-		avgTProt := prot.AverageTimes(tProtList)
 		//Change this so it checks that all the results are similar
 		var resultList []int
 		for _, c := range channels {
@@ -97,7 +96,7 @@ func IncPeers(plotter graph.Interface) {
 			fmt.Println("Peers do not agree on the result")
 			fmt.Printf("Result: %v \n", resultList)
 		}
-
+		avgTProt := prot.AverageTimes(tProtList)
 		plotter.AddData(i, avgTProt)
 	}
 	plotter.Plot("increment Peers", "IncPeers")
@@ -129,7 +128,6 @@ func IncMult(plotter graph.Interface) {
 			go goProt(tprot, channel)
 			time.Sleep(100 * time.Millisecond)
 		}
-		avgTProt := prot.AverageTimes(tProtList)
 		//Change this so it checks that all the results are similar
 		var resultList []int
 		for _, c := range channels {
@@ -141,7 +139,7 @@ func IncMult(plotter graph.Interface) {
 			fmt.Println("Peers do not agree on the result")
 			fmt.Printf("Result: %v \n", resultList)
 		}
-
+		avgTProt := prot.AverageTimes(tProtList)
 		plotter.AddData(i, avgTProt)
 	}
 	plotter.Plot("increment multiplication", "IncMult")
@@ -179,7 +177,7 @@ func IncBandwidth(plotter graph.Interface) {
 			go goProt(tprot, channel)
 			time.Sleep(100 * time.Millisecond)
 		}
-		avgTProt := prot.AverageTimes(tProtList)
+
 		//Change this so it checks that all the results are similar
 		var resultList []int
 		for _, c := range channels {
@@ -191,6 +189,7 @@ func IncBandwidth(plotter graph.Interface) {
 			fmt.Println("Peers do not agree on the result")
 			fmt.Printf("Result: %v \n", resultList)
 		}
+		avgTProt := prot.AverageTimes(tProtList)
 		plotter.AddData(i, avgTProt)
 	}
 	plotter.Plot("increment bandwidth", "IncBandwidth")
@@ -230,19 +229,17 @@ func IncDelay(plotter graph.Interface) {
 			time.Sleep(100 * time.Millisecond)
 		}
 
-		avgTProt := prot.AverageTimes(tProtList)
 		//Change this so it checks that all the results are similar
 		var resultList []int
 		for _, c := range channels {
 			result := <-c
 			resultList = append(resultList, int(result))
 		}
-
 		if !allSameResults(resultList) {
 			fmt.Println("Peers do not agree on the result")
 			fmt.Printf("Result: %v \n", resultList)
 		}
-
+		avgTProt := prot.AverageTimes(tProtList)
 		plotter.AddData(i, avgTProt)
 	}
 	plotter.Plot("icrement delay", "IncDelay")

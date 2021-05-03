@@ -398,3 +398,6 @@ MigrationBackup/
 
 # Tex files for graphs created
 *.tex
+
+# Excel files for graphs created
+*.xlsx

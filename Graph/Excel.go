@@ -11,7 +11,7 @@ type Excel struct {
 	rowCounter int
 }
 
-func createExcel() *Excel {
+func MkExcel() *Excel {
 	e := new(Excel)
 	e.file = excel.NewFile()
 	e.file.SetCellValue(e.file.GetSheetName(0), "B1", "Network (ms)")
