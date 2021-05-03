@@ -6,5 +6,5 @@ import (
 
 type Interface interface {
 	Plot(title string, variableName string)
-	AddData(data prot.Times)
+	AddData(variable int, data prot.Times)
 }
