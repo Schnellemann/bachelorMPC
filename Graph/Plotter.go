@@ -1,6 +1,7 @@
 package graph
 
 import (
+	prot "MPC/Protocol"
 	"fmt"
 	"os"
 
@@ -8,21 +9,33 @@ import (
 	"gonum.org/v1/plot/plotter"
 )
 
-type XY struct {
-	X, Y float64
+type Plotter struct {
+	data   []XY
+	format string
 }
 
-func convertToPlotFormat(xys []XY) plotter.XYs {
-	fXY := make(plotter.XYs, len(xys))
-	for i, xy := range xys {
-		fXY[i].X = xy.X
-		fXY[i].Y = xy.Y
+type XY struct {
+	X float64
+	Y prot.Times
+}
+
+func MkPlotter(format string) *Plotter {
+	plotter := new(Plotter)
+	plotter.format = format
+	return plotter
+}
+
+func (gp *Plotter) convertToPlotFormat() plotter.XYs {
+	fXY := make(plotter.XYs, len(gp.data))
+	for i, data := range gp.data {
+		fXY[i].X = data.X
+		fXY[i].Y = float64(SumTimes(data.Y))
 	}
 	return fXY
 }
 
-func PlotGraph(fileName string, xy []XY, title string, format string) error {
-	filePath := fileName + "." + format
+func (gp *Plotter) Plot(fileName string, title string) error {
+	filePath := fileName + "." + gp.format
 
 	f, err := os.Create(filePath)
 	if err != nil {
@@ -31,10 +44,10 @@ func PlotGraph(fileName string, xy []XY, title string, format string) error {
 	defer f.Close()
 	p := plot.New()
 
-	scatter, _ := plotter.NewScatter(convertToPlotFormat(xy))
+	scatter, _ := plotter.NewScatter(gp.convertToPlotFormat())
 	p.Add(scatter)
 
-	wt, err := p.WriterTo(512, 512, format)
+	wt, err := p.WriterTo(512, 512, gp.format)
 	if err != nil {
 		return fmt.Errorf("Could not write to %s: %v", filePath, err)
 	}
@@ -45,4 +58,13 @@ func PlotGraph(fileName string, xy []XY, title string, format string) error {
 
 	return nil
 
+}
+
+func (gp *Plotter) AddData(variable int, data *prot.Times) {
+	gp.data = append(gp.data, XY{X: float64(variable), Y: *data})
+}
+
+func SumTimes(timer prot.Times) int64 {
+	protTime := timer.Calculate + timer.Preprocess + timer.SetupTree
+	return protTime.Milliseconds()
 }
