@@ -19,6 +19,24 @@ type TimeMeasuring struct {
 	config *config.Config
 }
 
+func averageTimes(times []*Times) *Times {
+	t := new(Times)
+	for _, v := range times {
+		t.Network += v.Network
+		t.Calculate += v.Calculate
+		t.SetupTree += v.SetupTree
+		t.Preprocess += v.Preprocess
+		t.Run += v.Run
+	}
+	t.Network = time.Duration(int64(t.Network) / int64(len(times)))
+	t.Calculate = time.Duration(int64(t.Calculate) / int64(len(times)))
+	t.SetupTree = time.Duration(int64(t.SetupTree) / int64(len(times)))
+	t.Preprocess = time.Duration(int64(t.Preprocess) / int64(len(times)))
+	t.Run = time.Duration(int64(t.Run) / int64(len(times)))
+	return t
+
+}
+
 func MkTimeMeasuringProt(prot Prot, config *config.Config, timer *Times) *TimeMeasuring {
 	tm := new(TimeMeasuring)
 	tm.prot = prot
