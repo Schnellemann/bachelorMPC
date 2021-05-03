@@ -1,0 +1,21 @@
+{
+    "constantconfig": {
+        "ipports":
+        [
+            "192.168.1.193",
+            "192.168.1.248",
+            "192.168.1.141"
+        ],
+        "expression": "(p1 + p2) + p3",
+        "numberOfParties": 3
+    },
+    "variableconfigs": [
+        {
+            
+            "listen": "192.168.1.248:40002",
+            "connect": "192.168.1.193:40002",
+            "partyNr": 2,
+            "secret": 2
+        }
+    ]
+}
