@@ -19,7 +19,7 @@ type TimeMeasuring struct {
 	config *config.Config
 }
 
-func averageTimes(times []*Times) *Times {
+func AverageTimes(times []*Times) *Times {
 	t := new(Times)
 	for _, v := range times {
 		t.Network += v.Network

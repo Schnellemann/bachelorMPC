@@ -56,7 +56,6 @@ func (bp *BandwidthPeer) propagateMessage() {
 			fmt.Println("BandwidthPeer: Message to byte conversion fail")
 		}
 		messageSize := len(bytearray)
-		fmt.Println(messageSize)
 		if messageSize > bp.width {
 			toWait := int64(math.Ceil((float64(messageSize) / float64(bp.width)) - 1))
 			time.Sleep(time.Duration(toWait) * bp.penalty)

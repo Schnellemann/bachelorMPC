@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	exp.IncPeers()
+	exp.IncDelay()
 }
