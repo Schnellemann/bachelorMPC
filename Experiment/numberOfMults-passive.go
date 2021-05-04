@@ -13,17 +13,17 @@ import (
 //Increment multiplication
 //Uses 10 peers
 func IncrementMult(plotter graph.Interface) {
-	incrementMultWithDelay(plotter, 0, 2000, 50000, 2000)
+	incrementMultWithDelay(plotter, 0, 2000, 50000, 2000, makeRandomMultExpression)
 	plotter.Plot()
 }
 
-func incrementMultWithDelay(plotter graph.Interface, delay time.Duration, start int, end int, increment int) {
+func incrementMultWithDelay(plotter graph.Interface, delay time.Duration, start int, end int, increment int, multStrat randomMultMaker) {
 	fieldRange := 1049
 	plotter.NewSeries("Mult with delay " + delay.String())
 	for i := start; i <= end; i += increment {
 		fmt.Printf("Starting Experiment with %v multiplication. \n", i)
 		secretList := makeRandomSecretList(10, fieldRange)
-		expression := makeRandomMultExpression(len(secretList), i)
+		expression := multStrat(len(secretList), i)
 
 		configs := config.MakeConfigs(ip, expression, secretList)
 		peerlist := getXPeers(configs)

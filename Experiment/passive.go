@@ -48,6 +48,8 @@ func allSameResults(a []int) bool {
 	return true
 }
 
+type randomMultMaker func(int, int) string
+
 func makeRandomMultExpression(nrOfPeers int, nrOfMultiplication int) string {
 	expression := "p" + strconv.Itoa(rand.Intn(nrOfPeers)+1)
 	for i := 0; i < nrOfMultiplication; i++ {
@@ -56,6 +58,22 @@ func makeRandomMultExpression(nrOfPeers int, nrOfMultiplication int) string {
 	}
 
 	return expression
+}
+
+func makeRandomBalancedMultExpression(nrOfPeers int, nrOfMultiplication int) string {
+	if nrOfMultiplication > 2 {
+		leftNr := nrOfMultiplication / 2
+		left := makeRandomBalancedMultExpression(nrOfPeers, leftNr)
+		right := makeRandomBalancedMultExpression(nrOfPeers, nrOfMultiplication-leftNr)
+		return "(" + left + "*" + right + ")"
+	}
+	peerNr1 := strconv.Itoa(rand.Intn(nrOfPeers) + 1)
+	if nrOfMultiplication == 2 {
+		peerNr2 := strconv.Itoa(rand.Intn(nrOfPeers) + 1)
+		return "(p" + peerNr1 + "*p" + peerNr2 + ")"
+	} else {
+		return "(p" + peerNr1 + ")"
+	}
 }
 
 func makeRandomSecretList(nrOfParties int, field int) []int {

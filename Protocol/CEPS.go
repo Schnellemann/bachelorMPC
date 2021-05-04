@@ -244,9 +244,11 @@ func (prot *Ceps) multiply(ins *parsing.MultInstruction) {
 		}
 		prot.waitForShares(multiplicationIdentifiers)
 		var sharesForLagrange []netpack.Share
+		prot.rShares.mu.Lock()
 		for _, i := range multiplicationIdentifiers {
 			sharesForLagrange = append(sharesForLagrange, *prot.rShares.receivedShares[i])
 		}
+		prot.rShares.mu.Unlock()
 		//fmt.Printf("Party %v is calling lagrange with degree: %v, and shares: %v\n", prot.config.VariableConfig.PartyNr, int(prot.config.ConstantConfig.NumberOfParties-1), sharesForLagrange)
 		value, _ := prot.shamir.lagrangeInterpolation(sharesForLagrange, int(prot.config.ConstantConfig.NumberOfParties-1))
 		//Then share ab-r as the constant polynomial

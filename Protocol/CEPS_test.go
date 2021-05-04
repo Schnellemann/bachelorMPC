@@ -208,6 +208,28 @@ func TestMultipleMult(t *testing.T) {
 	}
 }
 
+func TestLargeBalanced(t *testing.T) {
+	configs := config.MakeConfigs(ip,
+		"(((((p5)+(p2+p3))+((p10+p9)+(p5+p2)))+(((p6+p8)+(p7+p6))+((p7+p9)+(p9+p8))))+((((p8)+(p8+p9))+((p1+p6)+(p2+p9)))+(((p8+p2)+(p10+p7))+((p8+p2)+(p6+p7)))))",
+		[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+	peerlist := getXPeers(configs)
+	var channels []chan int64
+	for i, c := range configs {
+		channel := make(chan int64)
+		channels = append(channels, channel)
+		//Make protocol
+		prot := MkProtocol(c, field.MakeModPrime(1049), peerlist[i])
+		go goProt(prot, channel)
+		time.Sleep(100 * time.Millisecond)
+	}
+	for i, c := range channels {
+		result := <-c
+		if result != 189 {
+			t.Errorf("Combined does not work correctly peer %v expected %v but got %v", i+1, 189, result)
+		}
+	}
+}
+
 func TestMultipleMult2(t *testing.T) {
 	configs := config.MakeConfigs(ip, "p1*p1*p1*p1*p2*p2*p2*p2*p3*p3", []int{2, 3, 5})
 	peerlist := getXPeers(configs)
