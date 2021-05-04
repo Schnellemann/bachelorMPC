@@ -15,13 +15,23 @@ import (
 
 var ip string = "127.0.1.1"
 
-func getXPeers(configList []*config.Config) []*party.Peer {
-	var peers []*party.Peer
+func getXPeers(configList []*config.Config) []party.IPeer {
+	var peers []party.IPeer
 	for _, c := range configList {
 		peer := party.MkPeer(c)
 		peers = append(peers, peer)
 	}
 	return peers
+}
+
+func getDelayedPeers(configs []*config.Config, peerlist []party.IPeer, delay int) []party.IPeer {
+	var delayPeerlist []party.IPeer
+	//Convert to delayPeer
+	for j, p := range peerlist {
+		dPeer := party.MkDelayedPeer(configs[j], time.Duration(delay), p)
+		delayPeerlist = append(delayPeerlist, dPeer)
+	}
+	return delayPeerlist
 }
 
 func goProt(prot prot.Prot, result chan int64) {
@@ -99,7 +109,7 @@ func IncPeers(plotter graph.Interface) {
 		avgTProt := prot.AverageTimes(tProtList)
 		plotter.AddData(i, avgTProt)
 	}
-	plotter.Plot("increment Peers", "IncPeers")
+	plotter.Plot()
 }
 
 //Increment multiplication
@@ -142,7 +152,7 @@ func IncMult(plotter graph.Interface) {
 		avgTProt := prot.AverageTimes(tProtList)
 		plotter.AddData(i, avgTProt)
 	}
-	plotter.Plot("increment multiplication", "IncMult")
+	plotter.Plot()
 }
 
 //Increment bandwidth
@@ -192,7 +202,7 @@ func IncBandwidth(plotter graph.Interface) {
 		avgTProt := prot.AverageTimes(tProtList)
 		plotter.AddData(i, avgTProt)
 	}
-	plotter.Plot("increment bandwidth", "IncBandwidth")
+	plotter.Plot()
 }
 
 //Increment delay
@@ -242,6 +252,6 @@ func IncDelay(plotter graph.Interface) {
 		avgTProt := prot.AverageTimes(tProtList)
 		plotter.AddData(i, avgTProt)
 	}
-	plotter.Plot("icrement delay", "IncDelay")
+	plotter.Plot()
 
 }
