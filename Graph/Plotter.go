@@ -6,12 +6,23 @@ import (
 	"os"
 
 	plot "gonum.org/v1/plot"
+	"gonum.org/v1/plot/font"
 	"gonum.org/v1/plot/plotter"
+	"gonum.org/v1/plot/plotutil"
+	"gonum.org/v1/plot/vg/draw"
 )
 
+type Series struct {
+	Data []XY
+	Name string
+}
+
 type Plotter struct {
-	data   []XY
-	format string
+	data     []Series
+	format   string
+	seriesNr int
+	title    string
+	xAxis    string
 }
 
 type XY struct {
@@ -19,23 +30,32 @@ type XY struct {
 	Y prot.Times
 }
 
-func MkPlotter(format string) *Plotter {
+func MkPlotter(title string, firstSeriesName string, format string, xAxisName string) *Plotter {
 	plotter := new(Plotter)
 	plotter.format = format
+	plotter.title = title
+	firstSerie := Series{Name: firstSeriesName}
+	plotter.data = append(plotter.data, firstSerie)
+	plotter.xAxis = xAxisName
 	return plotter
 }
 
-func (gp *Plotter) convertToPlotFormat() plotter.XYs {
-	fXY := make(plotter.XYs, len(gp.data))
-	for i, data := range gp.data {
-		fXY[i].X = data.X
-		fXY[i].Y = float64(SumTimes(data.Y))
+func (gp *Plotter) convertToPlotFormat() []plotter.XYs {
+	var result []plotter.XYs
+	for _, series := range gp.data {
+		fXY := make(plotter.XYs, len(series.Data))
+		for j, data := range series.Data {
+			fXY[j].X = data.X
+			fXY[j].Y = float64(SumTimes(data.Y))
+		}
+		result = append(result, fXY)
 	}
-	return fXY
+
+	return result
 }
 
-func (gp *Plotter) Plot(fileName string, title string) error {
-	filePath := fileName + "." + gp.format
+func (gp *Plotter) Plot() error {
+	filePath := gp.title + "." + gp.format
 
 	f, err := os.Create(filePath)
 	if err != nil {
@@ -43,9 +63,21 @@ func (gp *Plotter) Plot(fileName string, title string) error {
 	}
 	defer f.Close()
 	p := plot.New()
-
-	scatter, _ := plotter.NewScatter(gp.convertToPlotFormat())
-	p.Add(scatter)
+	p.Add(plotter.NewGrid())
+	p.Title.Text = gp.title
+	p.Title.TextStyle.Font.Variant = "Mono"
+	p.Y.Label.Text = "Time (ms)"
+	p.Y.Label.Padding = font.Length(20)
+	p.X.Label.Text = gp.xAxis
+	p.X.Label.Padding = font.Length(20)
+	series := gp.convertToPlotFormat()
+	for i, serie := range series {
+		scatter, _ := plotter.NewScatter(serie)
+		scatter.GlyphStyle.Color = plotutil.SoftColors[i]
+		scatter.Shape = draw.CircleGlyph{}
+		p.Add(scatter)
+		p.Legend.Add(gp.data[i].Name, scatter)
+	}
 
 	wt, err := p.WriterTo(512, 512, gp.format)
 	if err != nil {
@@ -61,7 +93,13 @@ func (gp *Plotter) Plot(fileName string, title string) error {
 }
 
 func (gp *Plotter) AddData(variable int, data *prot.Times) {
-	gp.data = append(gp.data, XY{X: float64(variable), Y: *data})
+	gp.data[gp.seriesNr].Data = append(gp.data[gp.seriesNr].Data, XY{X: float64(variable), Y: *data})
+}
+
+func (gp *Plotter) NewSeries(name string) {
+	gp.seriesNr = gp.seriesNr + 1
+	newSerie := Series{Name: name}
+	gp.data = append(gp.data, newSerie)
 }
 
 func SumTimes(timer prot.Times) int64 {

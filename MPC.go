@@ -12,7 +12,6 @@ import (
 
 func main() {
 	runExperiments()
-
 }
 
 func runConfig() {
@@ -26,6 +25,9 @@ func runConfig() {
 }
 
 func runExperiments() {
-	e := graph.MkExcel("Increment-Mult", "Delay (ms)")
+	var e graph.Interface
+	e = graph.MkExcel("Increment-Mult", "Delay (ms)")
 	exp.IncrementMult(e, 0)
+	//e = graph.MkPlotter("Increment Delay", "", "png", "Number of Peers")
+	//exp.IncDelay(e)
 }
