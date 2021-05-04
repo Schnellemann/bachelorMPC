@@ -5,6 +5,7 @@ import (
 )
 
 type Interface interface {
-	Plot(title string, variableName string) error
+	Plot() error
 	AddData(variable int, data *prot.Times)
+	NewSeries(name string)
 }
