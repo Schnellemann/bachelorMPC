@@ -99,7 +99,7 @@ func IncPeers(plotter graph.Interface) {
 		avgTProt := prot.AverageTimes(tProtList)
 		plotter.AddData(i, avgTProt)
 	}
-	plotter.Plot("increment Peers", "IncPeers")
+	plotter.Plot()
 }
 
 //Increment multiplication
@@ -142,7 +142,7 @@ func IncMult(plotter graph.Interface) {
 		avgTProt := prot.AverageTimes(tProtList)
 		plotter.AddData(i, avgTProt)
 	}
-	plotter.Plot("increment multiplication", "IncMult")
+	plotter.Plot()
 }
 
 //Increment bandwidth
@@ -192,7 +192,7 @@ func IncBandwidth(plotter graph.Interface) {
 		avgTProt := prot.AverageTimes(tProtList)
 		plotter.AddData(i, avgTProt)
 	}
-	plotter.Plot("increment bandwidth", "IncBandwidth")
+	plotter.Plot()
 }
 
 //Increment delay
@@ -242,6 +242,6 @@ func IncDelay(plotter graph.Interface) {
 		avgTProt := prot.AverageTimes(tProtList)
 		plotter.AddData(i, avgTProt)
 	}
-	plotter.Plot("icrement delay", "IncDelay")
+	plotter.Plot()
 
 }

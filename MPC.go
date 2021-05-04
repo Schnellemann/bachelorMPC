@@ -11,23 +11,21 @@ import (
 )
 
 func main() {
-	path := "Config\\configFiles\\" + "kaare" + ".json"
+	runExperiments()
+}
+
+func runExperiments() {
+	e := graph.MkPlotter("Increment Delay", "", "png", "Number of Peers")
+	exp.IncDelay(e)
+
+}
+
+func runConfig() {
+	path := "jens" + ".json"
 	config := &config.ReadConfig(path)[0]
 	field := field.MakeModPrime(1049)
 	peer := p.MkPeer(config)
 	protocol := prot.MkProtocol(config, field, peer)
 	res := protocol.Run()
 	fmt.Printf("Got result: %v\n", res)
-
-}
-
-func runExperiments() {
-	e := graph.MkExcel()
-	exp.IncDelay(e)
-	e = graph.MkExcel()
-	exp.IncBandwidth(e)
-	e = graph.MkExcel()
-	exp.IncMult(e)
-	e = graph.MkExcel()
-	exp.IncPeers(e)
 }
