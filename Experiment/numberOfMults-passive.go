@@ -13,10 +13,15 @@ import (
 
 //Increment multiplication
 //Uses 10 peers
-func IncrementMult(plotter graph.Interface, delay int) {
+func IncrementMult(plotter graph.Interface) {
+	incrementMultWithDelay(plotter, 0, 2000, 50000, 2000)
+	plotter.Plot()
+}
+
+func incrementMultWithDelay(plotter graph.Interface, delay int, start int, end int, increment int) {
 	fieldRange := 1049
 	plotter.NewSeries("Mult with delay " + strconv.Itoa(delay))
-	for i := 2000; i <= 50000; i += 2000 {
+	for i := start; i <= end; i += increment {
 		fmt.Printf("Starting Experiment with %v multiplication. \n", i)
 		secretList := makeRandomSecretList(10, fieldRange)
 		expression := makeRandomMultExpression(len(secretList), i)
@@ -54,5 +59,4 @@ func IncrementMult(plotter graph.Interface, delay int) {
 		avgTProt := prot.AverageTimes(tProtList)
 		plotter.AddData(i, avgTProt)
 	}
-	plotter.Plot()
 }

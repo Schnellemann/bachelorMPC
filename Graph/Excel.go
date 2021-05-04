@@ -79,5 +79,11 @@ func (e *Excel) AddData(variable int, data *prot.Times) {
 	e.file.SetCellValue(e.currentSheet, pos, data.SetupTree.Milliseconds())
 	pos, _ = excel.CoordinatesToCellName(5, e.rowCounter)
 	e.file.SetCellValue(e.currentSheet, pos, data.Preprocess.Milliseconds())
+
+	//Insert SUM() in column 7
+	pos, _ = excel.CoordinatesToCellName(7, e.rowCounter)
+	from, _ := excel.CoordinatesToCellName(3, e.rowCounter)
+	to, _ := excel.CoordinatesToCellName(5, e.rowCounter)
+	e.file.SetCellFormula(e.currentSheet, pos, "=SUM("+from+":"+to+")")
 	e.rowCounter += 1
 }
