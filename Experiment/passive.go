@@ -24,11 +24,11 @@ func getXPeers(configList []*config.Config) []party.IPeer {
 	return peers
 }
 
-func getDelayedPeers(configs []*config.Config, peerlist []party.IPeer, delay int) []party.IPeer {
+func getDelayedPeers(configs []*config.Config, peerlist []party.IPeer, delay time.Duration) []party.IPeer {
 	var delayPeerlist []party.IPeer
 	//Convert to delayPeer
 	for j, p := range peerlist {
-		dPeer := party.MkDelayedPeer(configs[j], time.Duration(delay), p)
+		dPeer := party.MkDelayedPeer(configs[j], delay, p)
 		delayPeerlist = append(delayPeerlist, dPeer)
 	}
 	return delayPeerlist

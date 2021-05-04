@@ -7,7 +7,6 @@ import (
 	prot "MPC/Protocol"
 
 	"fmt"
-	"strconv"
 	"time"
 )
 
@@ -18,9 +17,9 @@ func IncrementMult(plotter graph.Interface) {
 	plotter.Plot()
 }
 
-func incrementMultWithDelay(plotter graph.Interface, delay int, start int, end int, increment int) {
+func incrementMultWithDelay(plotter graph.Interface, delay time.Duration, start int, end int, increment int) {
 	fieldRange := 1049
-	plotter.NewSeries("Mult with delay " + strconv.Itoa(delay))
+	plotter.NewSeries("Mult with delay " + delay.String())
 	for i := start; i <= end; i += increment {
 		fmt.Printf("Starting Experiment with %v multiplication. \n", i)
 		secretList := makeRandomSecretList(10, fieldRange)

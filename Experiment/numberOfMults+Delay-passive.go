@@ -1,10 +1,13 @@
 package experiment
 
-import graph "MPC/Graph"
+import (
+	graph "MPC/Graph"
+	"time"
+)
 
 func IncrementMultAndDelay(plotter graph.Interface) {
-	for delay := 0; delay < 110; delay += 10 {
-		incrementMultWithDelay(plotter, delay, 200, 4000, 200)
+	for delay := 10; delay <= 200; delay *= 2 {
+		incrementMultWithDelay(plotter, time.Duration(delay)*time.Millisecond, 100, 500, 100)
 	}
 	plotter.Plot()
 }
