@@ -26,8 +26,8 @@ func runConfig() {
 
 func runExperiments() {
 	var e graph.Interface
-	e = graph.MkExcel("Increment-Mult+Delay-balanced", "Number of mults")
-	exp.IncrementMultBalanced(e)
+	e = graph.MkExcel("Increment Peer", "Number of Peers")
+	exp.IncrementPeerAndDelay(e)
 	//e = graph.MkExcel("Increment-Mult+Delay", "Number of mults")
 	//exp.IncrementMultAndDelay(e)
 	//e = graph.MkExcel("Increment-Mult", "Delay (ms)")
