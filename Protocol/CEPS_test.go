@@ -4,6 +4,7 @@ import (
 	config "MPC/Config"
 	field "MPC/Fields"
 	party "MPC/Party"
+	"fmt"
 	"testing"
 	"time"
 )
@@ -222,10 +223,34 @@ func TestLargeBalanced(t *testing.T) {
 		go goProt(prot, channel)
 		time.Sleep(100 * time.Millisecond)
 	}
+	fmt.Println("Done Setting up the protocols")
 	for i, c := range channels {
 		result := <-c
 		if result != 189 {
 			t.Errorf("Combined does not work correctly peer %v expected %v but got %v", i+1, 189, result)
+		}
+	}
+}
+
+func TestLargeBalancedWith3Peers(t *testing.T) {
+	configs := config.MakeConfigs(ip,
+		"(((((p1)+(p2+p3))+((p1+p2)+(p1+p2)))+(((p1+p2)+(p3+p3))+((p1+p3)+(p1+p3))))+((((p2)+(p1+p3))+((p1+p2)+(p2+p1)))+(((p3+p2)+(p1+p3))+((p3+p2)+(p2+p3)))))",
+		[]int{1, 2, 3})
+	peerlist := getXPeers(configs)
+	var channels []chan int64
+	for i, c := range configs {
+		channel := make(chan int64)
+		channels = append(channels, channel)
+		//Make protocol
+		prot := MkProtocol(c, field.MakeModPrime(1049), peerlist[i])
+		go goProt(prot, channel)
+		time.Sleep(100 * time.Millisecond)
+	}
+	fmt.Println("Done Setting up the protocols")
+	for i, c := range channels {
+		result := <-c
+		if result != 60 {
+			t.Errorf("Combined does not work correctly peer %v expected %v but got %v", i+1, 60, result)
 		}
 	}
 }
