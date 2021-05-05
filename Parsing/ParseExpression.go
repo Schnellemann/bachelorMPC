@@ -115,6 +115,8 @@ func getExprName(node ast.Expr, lastUnique int) string {
 	switch t := node.(type) {
 	case *ast.Ident:
 		return t.Name
+	case *ast.ParenExpr:
+		return getExprName(t.X, lastUnique)
 	default:
 		return "r" + strconv.Itoa(lastUnique)
 	}

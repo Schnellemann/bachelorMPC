@@ -158,6 +158,7 @@ func (prot *Ceps) receive() {
 
 func (prot *Ceps) waitForShares(needToWaitOn []netpack.ShareIdentifier) {
 	needToWaitOn = aux.RemoveDuplicateValues(needToWaitOn)
+	//fmt.Printf("Party %v started waiting for %v\n", prot.config.VariableConfig.PartyNr, needToWaitOn)
 	prot.rShares.mu.Lock()
 	prot.subscribeMap.lock.Lock()
 	var wg sync.WaitGroup
