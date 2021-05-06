@@ -28,7 +28,7 @@ func incrementPeerWithDelay(plotter graph.Interface, delay time.Duration, start 
 		delayedPeers := getDelayedPeers(configs, peerlist, delay)
 		var channels []chan int64
 		var timers []*prot.Times
-		for j := 0; j < i; j++ {
+		for j := 0; j < len(configs); j++ {
 			timers = append(timers, new(prot.Times))
 		}
 		var tProtList []*prot.Times

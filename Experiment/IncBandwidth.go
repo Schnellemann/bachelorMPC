@@ -11,12 +11,12 @@ import (
 )
 
 func IncBandwidth(plotter graph.Interface) {
+	plotter.NewSeries("Bandwidth")
 	fieldRange := 1049
-	plotter.NewSeries("Bandwidth size")
-	for i := 20; i < 200; i *= 2 {
+	for i := 5; i < 400; i *= 2 {
 		fmt.Printf("Starting Experiment with %v width. \n", i)
 		secretList := makeRandomSecretList(10, fieldRange)
-		expression := makeRandomMultExpression(len(secretList), i)
+		expression := makeRandomMultExpression(len(secretList), 20)
 
 		configs := config.MakeConfigs(ip, expression, secretList)
 		peerlist := getXPeers(configs)
@@ -26,9 +26,10 @@ func IncBandwidth(plotter graph.Interface) {
 			bPeer := party.MkBandwidthPeer(configs[j], p, i, 2*time.Millisecond)
 			bandwidthPeerlist = append(bandwidthPeerlist, bPeer)
 		}
+
 		var channels []chan int64
 		var timers []*prot.Times
-		for j := 0; j < i; j++ {
+		for j := 0; j < len(configs); j++ {
 			timers = append(timers, new(prot.Times))
 		}
 		var tProtList []*prot.Times

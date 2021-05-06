@@ -26,12 +26,12 @@ func runConfig() {
 
 func runExperiments() {
 	var e graph.Interface
-	e = graph.MkExcel("Increment Peer", "Number of Peers")
-	exp.IncrementPeerAndDelay(e)
+	//e = graph.MkExcel("Increment Peer", "Peers")
+	//exp.IncrementPeer(e)
 	//e = graph.MkExcel("Increment-Mult+Delay", "Number of mults")
 	//exp.IncrementMultAndDelay(e)
-	//e = graph.MkExcel("Increment-Mult", "Delay (ms)")
-	//exp.IncrementMult(e)
+	e = graph.MkExcel("Increment-Mult", "Delay (ms)")
+	exp.IncrementMult(e)
 	//e = graph.MkPlotter("Increment Delay", "", "png", "Number of Peers")
 	//exp.IncDelay(e)
 }
