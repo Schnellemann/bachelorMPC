@@ -11,7 +11,7 @@ import (
 )
 
 func IncrementPeer(plotter graph.Interface) {
-	incrementPeerWithDelay(plotter, 0, 10, 90, 10, makeRandomMultExpression)
+	incrementPeerWithDelay(plotter, 0, 10, 70, 10, makeRandomMultExpression)
 	plotter.Plot()
 }
 
@@ -21,7 +21,7 @@ func incrementPeerWithDelay(plotter graph.Interface, delay time.Duration, start 
 	for i := start; i <= end; i += increment {
 		fmt.Printf("Starting Experiment with %v peers. \n", i)
 		secretList := makeRandomSecretList(i, fieldRange)
-		expression := multStrat(len(secretList), 20)
+		expression := multStrat(len(secretList), 100)
 
 		configs := config.MakeConfigs(ip, expression, secretList)
 		peerlist := getXPeers(configs)

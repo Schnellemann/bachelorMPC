@@ -69,25 +69,13 @@ func (tM *TimeMeasuring) setupTree() {
 	//log.Printf("Parsing the instructions tree for party %v took %v.\n", tM.config.VariableConfig.PartyNr, endTime.Sub(startTime))
 
 }
-func (tM *TimeMeasuring) runPreprocess() {
-	startTime := time.Now()
-	tM.prot.runPreprocess()
-	endTime := time.Now()
-	tM.Timer.Preprocess = endTime.Sub(startTime)
-	//log.Printf("Running preprocess for party %v took %v.\n", tM.config.VariableConfig.PartyNr, endTime.Sub(startTime))
-
-}
 func (tM *TimeMeasuring) Run() int64 {
 	startTime := time.Now()
 	tM.startNetwork()
 	tM.setupTree()
-	tM.runPreprocess()
 	res := tM.calculate()
 	endTime := time.Now()
 	tM.Timer.Run = endTime.Sub(startTime)
 	//log.Printf("Running the full protocol for party %v took %v.\n", tM.config.VariableConfig.PartyNr, endTime.Sub(startTime))
 	return res
-}
-func (tM *TimeMeasuring) Destroy() {
-	tM.prot.Destroy()
 }

@@ -13,7 +13,7 @@ import (
 //Increment multiplication
 //Uses 10 peers
 func IncrementMult(plotter graph.Interface) {
-	incrementMultWithDelay(plotter, 0, 2000, 50000, 2000, makeRandomBalancedMultExpression)
+	incrementMultWithDelay(plotter, 0, 2000, 46000, 4000, makeRandomMultExpression)
 	plotter.Plot()
 }
 
