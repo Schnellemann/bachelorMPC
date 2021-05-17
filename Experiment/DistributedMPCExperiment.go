@@ -49,6 +49,7 @@ func RunDistributedExperiment(path string, plotter graph.Interface, numberOfPart
 		go goProt(tprot, channel)
 		time.Sleep(100 * time.Millisecond)
 	}
+	fmt.Println("Done setting up")
 	var resultList []int
 	for _, c := range channels {
 		result := <-c
