@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	runExperiments()
+	makeDistributed()
 }
 
 func runConfig() {

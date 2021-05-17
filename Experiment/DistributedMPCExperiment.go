@@ -12,12 +12,13 @@ import (
 
 func MakeDistributedExperimentFiles(peersPrComputer int, nrOfComputers int, ips []string) {
 	for i := 1; i < 11; i++ {
-		nrOfParties := nrOfComputers * (peersPrComputer * i)
+		nrOfParties := nrOfComputers * (peersPrComputer)
 		var paths = makePathStrings(nrOfComputers, nrOfParties)
 		var secrets = makeRandomSecretList(nrOfParties, 1049)
 		exp := makeRandomBalancedMultExpression(nrOfParties, 100)
-		confs := config.MakeDistributedConfigs(ips, nrOfParties, secrets, exp)
+		confs := config.MakeDistributedConfigs(ips, peersPrComputer, nrOfParties, secrets, exp)
 		config.WriteConfig(paths, confs, peersPrComputer)
+		peersPrComputer += 3
 	}
 }
 

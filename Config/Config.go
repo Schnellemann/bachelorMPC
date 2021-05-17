@@ -82,14 +82,13 @@ func MakeConfigs(ip string, expression string, secrets []int) []*Config {
 	return configList
 }
 
-func MakeDistributedConfigs(listOfIps []string, nrOfPeers int, secrets []int, expression string) []*Config {
+func MakeDistributedConfigs(listOfIps []string, peersPrComputer int, nrOfPeers int, secrets []int, expression string) []*Config {
 	var configList []*Config
 	var connectLists [][]string
 	nrOfComputers := len(listOfIps)
 	var fullListenList []string
-	peersPrComputer := nrOfPeers / nrOfComputers
 	if len(secrets) != nrOfPeers {
-		fmt.Printf("Length of secrets is %v, and number of peers for this computer is %v", len(secrets), nrOfPeers)
+		fmt.Printf("Length of secrets is %v, and number of peers for this computer is %v \n", len(secrets), nrOfPeers)
 	}
 	for i := 0; i < nrOfComputers; i++ {
 		computerIp := listOfIps[i]
