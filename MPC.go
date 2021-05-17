@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	MakeDistributedConfigFiles()
+	runExperiments()
 }
 
 func runConfig() {

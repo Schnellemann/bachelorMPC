@@ -32,6 +32,7 @@ func RunDistributedExperiment(path string, plotter graph.Interface) {
 	var resultList []int
 	for _, c := range channels {
 		result := <-c
+		fmt.Println(result)
 		resultList = append(resultList, int(result))
 	}
 
