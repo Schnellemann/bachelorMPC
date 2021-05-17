@@ -34,7 +34,7 @@ type ProtocolConfig struct {
 	ConstantConfig  ConstantConfig   `json:"constantconfig"`
 }
 
-func ReadConfig(filepath string) (configList []*Config) {
+func ReadConfig(filepath string) []*Config {
 	jsonFile, err := os.Open(filepath)
 	defer jsonFile.Close()
 	if err != nil {
@@ -44,19 +44,14 @@ func ReadConfig(filepath string) (configList []*Config) {
 	if err != nil {
 		fmt.Println("Error reading config file")
 	}
-	var conf ProtocolConfig
+	var conf []*Config
 	err = json.Unmarshal(byteValue, &conf)
 	if err != nil {
 		fmt.Println("Error unmarshalling json")
 		fmt.Println("Error:", err)
 	}
-	for _, varConf := range conf.VariableConfigs {
-		config := new(Config)
-		config.VariableConfig = varConf
-		config.ConstantConfig = conf.ConstantConfig
-		configList = append(configList, config)
-	}
-	return
+
+	return conf
 }
 
 func WriteConfig(filePaths []string, configs []*Config, peersPrComputer int) {
