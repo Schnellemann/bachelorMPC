@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	runExperiments()
+	makeDistributed()
 }
 
 func runConfig() {
@@ -40,15 +40,11 @@ func runExperiments() {
 
 }
 
-func MakeDistributedConfigFiles() {
-	var paths = []string{"jensConf.json", "madsConf.json", "kaareConf.json"}
-	var secrets = []int{1, 2, 3, 4, 5, 6}
+func makeDistributed() {
 	var ips = []string{
 		"192.168.1.193",
 		"192.168.1.141",
-		"192.168.1.248"}
-	nrOfPeers := 6
-	exp := "p1*p2*p3*p4*p5*p6"
-	confs := config.MakeDistributedConfigs(ips, nrOfPeers, secrets, exp)
-	config.WriteConfig(paths, confs, 2)
+		"192.168.1.248",
+	}
+	exp.MakeDistributedExperimentFiles(3, 3, ips)
 }

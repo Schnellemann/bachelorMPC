@@ -6,10 +6,30 @@ import (
 	graph "MPC/Graph"
 	prot "MPC/Protocol"
 	"fmt"
+	"strconv"
 	"time"
 )
 
-func RunDistributedExperiment(path string, plotter graph.Interface) {
+func MakeDistributedExperimentFiles(peersPrComputer int, nrOfComputers int, ips []string) {
+	for i := 1; i < 11; i++ {
+		nrOfParties := nrOfComputers * (peersPrComputer * i)
+		var paths = makePathStrings(nrOfComputers, nrOfParties)
+		var secrets = makeRandomSecretList(nrOfParties, 1049)
+		exp := makeRandomBalancedMultExpression(nrOfParties, 100)
+		confs := config.MakeDistributedConfigs(ips, nrOfParties, secrets, exp)
+		config.WriteConfig(paths, confs, peersPrComputer)
+	}
+}
+
+func makePathStrings(numberOfComputers int, numberOfParties int) (paths []string) {
+	for i := 0; i < numberOfComputers; i++ {
+		paths = append(paths, "com_"+strconv.Itoa(i+1)+"-"+strconv.Itoa(numberOfParties)+"-"+"peers.json")
+	}
+	return
+}
+
+func RunDistributedExperiment(path string, plotter graph.Interface, numberOfParties int) {
+	plotter.NewSeries("Number-of-Parties: " + strconv.Itoa(numberOfParties))
 	fieldRange := 1049
 	configs := config.ReadConfig(path)
 	peerlist := getXPeers(configs)
