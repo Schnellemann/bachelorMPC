@@ -8,6 +8,7 @@ import (
 	p "MPC/Party"
 	prot "MPC/Protocol"
 	"fmt"
+	"strconv"
 )
 
 func main() {
@@ -36,7 +37,10 @@ func runExperiments() {
 	//exp.IncDelay(e)
 
 	e = graph.MkExcel("Distributed-Mult", "Peers")
-	exp.RunDistributedExperiment("jensConf.json", e)
+	computerNr := 1
+	numberOfParties := 9
+	path := "com_" + strconv.Itoa(computerNr) + "-" + strconv.Itoa(numberOfParties) + "-peers.json"
+	exp.RunDistributedExperiment(path, e, numberOfParties)
 
 }
 
