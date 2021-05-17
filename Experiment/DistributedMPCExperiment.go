@@ -62,4 +62,5 @@ func RunDistributedExperiment(path string, plotter graph.Interface, numberOfPart
 	}
 	avgTProt := prot.AverageTimes(tProtList)
 	plotter.AddData(len(configs), avgTProt)
+	plotter.Plot()
 }
