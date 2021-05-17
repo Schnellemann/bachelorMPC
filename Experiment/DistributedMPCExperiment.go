@@ -11,6 +11,7 @@ import (
 )
 
 func MakeDistributedExperimentFiles(peersPrComputer int, nrOfComputers int, ips []string) {
+	inc := peersPrComputer
 	for i := 1; i < 11; i++ {
 		nrOfParties := nrOfComputers * (peersPrComputer)
 		var paths = makePathStrings(nrOfComputers, nrOfParties)
@@ -18,7 +19,7 @@ func MakeDistributedExperimentFiles(peersPrComputer int, nrOfComputers int, ips 
 		exp := makeRandomBalancedMultExpression(nrOfParties, 100)
 		confs := config.MakeDistributedConfigs(ips, peersPrComputer, nrOfParties, secrets, exp)
 		config.WriteConfig(paths, confs, peersPrComputer)
-		peersPrComputer += 3
+		peersPrComputer += inc
 	}
 }
 
@@ -48,7 +49,7 @@ func RunDistributedExperiment(path string, plotter graph.Interface, numberOfPart
 		tprot := prot.MkTimeMeasuringProt(p, c, timers[j])
 		tProtList = append(tProtList, tprot.Timer)
 		go goProt(tprot, channel)
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(500 * time.Millisecond)
 	}
 	fmt.Println("Done setting up")
 	var resultList []int
