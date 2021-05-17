@@ -11,11 +11,11 @@ import (
 
 func TestBandwidthConstraint(t *testing.T) {
 	configs := config.ReadConfig(filepath)
-	conf := &configs[0]
-	conf2 := &configs[1]
-	conf3 := &configs[2]
-	conf4 := &configs[3]
-	conf5 := &configs[4]
+	conf := configs[0]
+	conf2 := configs[1]
+	conf3 := configs[2]
+	conf4 := configs[3]
+	conf5 := configs[4]
 
 	peer := MkPeer(conf)
 	peer2 := MkPeer(conf2)

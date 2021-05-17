@@ -11,12 +11,12 @@ import (
 )
 
 func main() {
-	runExperiments()
+	MakeDistributedConfigFiles()
 }
 
 func runConfig() {
 	path := "Config\\configFiles\\" + "kaare" + ".json"
-	config := &config.ReadConfig(path)[0]
+	config := config.ReadConfig(path)[0]
 	field := field.MakeModPrime(1049)
 	peer := p.MkPeer(config)
 	protocol := prot.MkProtocol(config, field, peer)
@@ -30,8 +30,25 @@ func runExperiments() {
 	//exp.IncrementPeer(e)
 	//e = graph.MkExcel("Increment-Mult+Delay", "Number of mults")
 	//exp.IncrementMultAndDelay(e)
-	e = graph.MkExcel("Increment-Mult", "Delay (ms)")
-	exp.IncrementMult(e)
+	//e = graph.MkExcel("Increment-Mult", "Delay (ms)")
+	//exp.IncrementMult(e)
 	//e = graph.MkPlotter("Increment Delay", "", "png", "Number of Peers")
 	//exp.IncDelay(e)
+
+	e = graph.MkExcel("Distributed-Mult", "Peers")
+	exp.RunDistributedExperiment("jensConf.json", e)
+
+}
+
+func MakeDistributedConfigFiles() {
+	var paths = []string{"jensConf.json", "madsConf.json", "kaareConf.json"}
+	var secrets = []int{1, 2, 3, 4, 5, 6}
+	var ips = []string{
+		"192.168.1.193",
+		"192.168.1.141",
+		"192.168.1.248"}
+	nrOfPeers := 6
+	exp := "p1*p2*p3*p4*p5*p6"
+	confs := config.MakeDistributedConfigs(ips, nrOfPeers, secrets, exp)
+	config.WriteConfig(paths, confs, 2)
 }

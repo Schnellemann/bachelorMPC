@@ -11,7 +11,7 @@ func TestConfigLoad(t *testing.T) {
 	listen := "127.0.1.1:6969"
 	portString := "6969"
 	ipportParty1 := "127.0.1.1:6969"
-	var conf Config = ReadConfig(path)[0]
+	var conf *Config = ReadConfig(path)[0]
 	if conf.ConstantConfig.Expression != expString {
 		t.Errorf("Expression should have been %v, but is %v", expString, conf.ConstantConfig.Expression)
 	}
