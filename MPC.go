@@ -37,7 +37,7 @@ func runExperiments() {
 	//exp.IncDelay(e)
 	numberOfParties := 27
 	e = graph.MkExcel("Distributed-Mult-"+strconv.Itoa(numberOfParties), "Peers")
-	computerNr := 1
+	computerNr := 2
 
 	path := "com_" + strconv.Itoa(computerNr) + "-" + strconv.Itoa(numberOfParties) + "-peers.json"
 	exp.RunDistributedExperiment(path, e, numberOfParties)
@@ -46,9 +46,9 @@ func runExperiments() {
 
 func makeDistributed() {
 	var ips = []string{
+		"192.168.87.128",
 		"192.168.87.144",
 		"192.168.87.189",
-		"192.168.87.128",
 	}
 	exp.MakeDistributedExperimentFiles(3, 3, ips)
 }
