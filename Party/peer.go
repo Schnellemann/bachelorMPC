@@ -23,8 +23,9 @@ type Peer struct {
 }
 
 type peerList struct {
-	ipPorts []string
-	lock    sync.Mutex
+	hasReceived *sync.WaitGroup
+	ipPorts     []string
+	lock        sync.Mutex
 }
 
 type connection struct {
@@ -39,6 +40,8 @@ type ConnectionTuple struct {
 
 func mkPeerList() *peerList {
 	pl := new(peerList)
+	pl.hasReceived = new(sync.WaitGroup)
+	pl.hasReceived.Add(1)
 	return pl
 }
 
@@ -54,11 +57,15 @@ func MkPeer(config *config.Config) *Peer {
 func (p *Peer) StartPeer(shareChannel chan netpack.Share, wg *sync.WaitGroup) {
 	p.cShare = shareChannel
 	p.wg = wg
+	go p.listenForConnections(p.config.VariableConfig.ListenIpPort)
 	p.peerlist.lock.Lock()
 	p.peerlist.ipPorts = append(p.peerlist.ipPorts, p.config.VariableConfig.ListenIpPort)
 	p.peerlist.lock.Unlock()
+
 	//Test on localhost
-	if p.config.VariableConfig.ConnectIpPort != "" {
+	if p.config.VariableConfig.ConnectIpPort == "" {
+		p.peerlist.hasReceived.Done()
+	} else {
 		conn, err := net.Dial("tcp", p.config.VariableConfig.ConnectIpPort)
 		if err != nil {
 			fmt.Printf("Port %v could not connect peer on port %v \n", p.config.VariableConfig.ListenIpPort, p.config.VariableConfig.ConnectIpPort)
@@ -82,7 +89,7 @@ func (p *Peer) StartPeer(shareChannel chan netpack.Share, wg *sync.WaitGroup) {
 			p.broadcastPeer(p.config.VariableConfig.ListenIpPort)
 		}
 	}
-	go p.listenForConnections(int(p.config.ConstantConfig.NumberOfParties), p.config.VariableConfig.ListenIpPort)
+
 }
 
 //Send Methods
@@ -123,6 +130,7 @@ func (p *Peer) SendShare(share netpack.Share, receiver int) {
 }
 
 func (p *Peer) sendPeerlist(encoder *gob.Encoder) {
+	p.peerlist.hasReceived.Wait()
 	peerPackage := new(netpack.NetPackage)
 	peerPackage.IpPorts = p.peerlist.ipPorts
 	p.write(encoder, peerPackage)
@@ -167,6 +175,7 @@ func (p *Peer) receivePeers(dec *gob.Decoder) {
 	p.peerlist.lock.Lock()
 	p.peerlist.ipPorts = append(p.peerlist.ipPorts, recievedPeersPackage.IpPorts...)
 	p.peerlist.lock.Unlock()
+	p.peerlist.hasReceived.Done()
 }
 
 func (p *Peer) addConnection(newConnection net.Conn, ip string) {
@@ -183,7 +192,7 @@ func (p *Peer) addConnection(newConnection net.Conn, ip string) {
 	p.connections.lock.Unlock()
 	p.checkReady()
 	//send peers to the new connections
-	p.sendPeerlist(encoder)
+	go p.sendPeerlist(encoder)
 	go p.handleConnection(decoder)
 }
 
@@ -244,27 +253,32 @@ func (p *Peer) connectToPeers() {
 	p.checkReady()
 }
 
-func (p *Peer) listenForConnections(totalPeers int, listenOnAddress string) {
+func (p *Peer) listenForConnections(listenOnAddress string) {
 	li, err := net.Listen("tcp", listenOnAddress)
 	if err != nil {
-		fmt.Println("Error in listening")
+		fmt.Printf("Error in listening, err: %v\n", err.Error())
 		return
 	}
 	defer li.Close()
 	//fmt.Println("Other peers can connect to me on the following ip:port")
 	//fmt.Println("Address " + ": " + p.config.VariableConfig.ListenIpPort)
-	p.connections.lock.Lock()
-	i := len(p.connections.c) + 1
-	p.connections.lock.Unlock()
-	for i < int(p.config.ConstantConfig.NumberOfParties) {
+	if p.config.VariableConfig.PartyNr == p.config.ConstantConfig.NumberOfParties {
+		return
+	}
+	for {
 		conn, err := li.Accept()
-		//TODO update Connectionstuple with encoder and number of the connected peer
 		if err != nil {
 			fmt.Println("Failed connection on accept")
 			return
 		}
 		p.addConnection(conn, "")
-		i++
+		p.connections.lock.Lock()
+		numberOfConnections := len(p.connections.c)
+		p.connections.lock.Unlock()
+		if numberOfConnections == int(p.config.ConstantConfig.NumberOfParties)-1 {
+			break
+		}
+
 	}
 }
 

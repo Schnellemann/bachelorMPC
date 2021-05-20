@@ -8,7 +8,6 @@ import (
 	p "MPC/Party"
 	prot "MPC/Protocol"
 	"fmt"
-	"strconv"
 )
 
 func main() {
@@ -27,20 +26,20 @@ func runConfig() {
 
 func runExperiments() {
 	var e graph.Interface
-	//e = graph.MkExcel("Increment Peer", "Peers")
-	//exp.IncrementPeer(e)
+	e = graph.MkExcel("Increment Peer", "Peers")
+	exp.IncrementPeer(e)
 	//e = graph.MkExcel("Increment-Mult+Delay", "Number of mults")
 	//exp.IncrementMultAndDelay(e)
 	//e = graph.MkExcel("Increment-Mult", "Delay (ms)")
 	//exp.IncrementMult(e)
 	//e = graph.MkPlotter("Increment Delay", "", "png", "Number of Peers")
 	//exp.IncDelay(e)
-	numberOfParties := 27
-	e = graph.MkExcel("Distributed-Mult-"+strconv.Itoa(numberOfParties), "Peers")
-	computerNr := 1
+	// numberOfParties := 27
+	// e = graph.MkExcel("Distributed-Mult-"+strconv.Itoa(numberOfParties), "Peers")
+	// computerNr := 1
 
-	path := "com_" + strconv.Itoa(computerNr) + "-" + strconv.Itoa(numberOfParties) + "-peers.json"
-	exp.RunDistributedExperiment(path, e, numberOfParties)
+	// path := "com_" + strconv.Itoa(computerNr) + "-" + strconv.Itoa(numberOfParties) + "-peers.json"
+	// exp.RunDistributedExperiment(path, e, numberOfParties)
 
 }
 
