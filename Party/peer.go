@@ -61,7 +61,7 @@ func (p *Peer) StartPeer(shareChannel chan netpack.Share, wg *sync.WaitGroup) {
 	if p.config.VariableConfig.ConnectIpPort != "" {
 		conn, err := net.Dial("tcp", p.config.VariableConfig.ConnectIpPort)
 		if err != nil {
-			fmt.Println("Could not connect peer")
+			fmt.Printf("Port %v could not connect peer on port %v \n", p.config.VariableConfig.ListenIpPort, p.config.VariableConfig.ConnectIpPort)
 		} else if conn != nil {
 			//defer conn.Close()
 			//Make the decoder such that we can decode the messages

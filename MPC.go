@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	makeDistributed()
+	runExperiments()
 }
 
 func runConfig() {
@@ -37,7 +37,7 @@ func runExperiments() {
 	//exp.IncDelay(e)
 	numberOfParties := 27
 	e = graph.MkExcel("Distributed-Mult-"+strconv.Itoa(numberOfParties), "Peers")
-	computerNr := 2
+	computerNr := 1
 
 	path := "com_" + strconv.Itoa(computerNr) + "-" + strconv.Itoa(numberOfParties) + "-peers.json"
 	exp.RunDistributedExperiment(path, e, numberOfParties)
