@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	runExperiments()
+	makeDistributed()
 }
 
 func runConfig() {
@@ -46,8 +46,8 @@ func runExperiments() {
 
 func makeDistributed() {
 	var ips = []string{
-		"192.168.87.189",
 		"192.168.87.144",
+		"192.168.87.189",
 		"192.168.87.128",
 	}
 	exp.MakeDistributedExperimentFiles(3, 3, ips)
