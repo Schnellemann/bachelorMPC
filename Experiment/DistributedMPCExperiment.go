@@ -32,8 +32,8 @@ func makePathStrings(numberOfComputers int, variable int, variableIden string) (
 	return
 }
 
-func RunDistributedExperiment(path string, plotter graph.Interface, numberOfParties int) {
-	plotter.NewSeries("Number-of-Parties: " + strconv.Itoa(numberOfParties))
+func RunDistributedExperiment(path string, plotter graph.Interface, numberOfMults int) {
+	plotter.NewSeries("Number-of-Mults: " + strconv.Itoa(numberOfMults))
 	fieldRange := 1049
 	configs := config.ReadConfig(path)
 	peerlist := getXPeers(configs)
