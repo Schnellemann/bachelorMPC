@@ -10,22 +10,24 @@ import (
 	"time"
 )
 
-func MakeDistributedExperimentFiles(peersPrComputer int, nrOfMults int, ips []string) {
-	inc := peersPrComputer
-	for i := 1; i < 11; i++ {
-		nrOfParties := len(ips) * (peersPrComputer)
-		var paths = makePathStrings(len(ips), nrOfParties)
-		var secrets = makeRandomSecretList(nrOfParties, 1049)
-		exp := makeRandomBalancedMultExpression(nrOfParties, nrOfMults)
-		confs := config.MakeDistributedConfigs(ips, peersPrComputer, nrOfParties, secrets, exp)
-		config.WriteConfig(paths, confs, peersPrComputer)
-		peersPrComputer += inc
+func MakeDistributedIncMults(start int, end int, increment int, ips []string) {
+	for i := start; i <= end; i += increment {
+		MakeDistributedExperimentFile(3, i, ips, "mults")
 	}
 }
 
-func makePathStrings(numberOfComputers int, numberOfParties int) (paths []string) {
+func MakeDistributedExperimentFile(peersPrComputer int, nrOfMults int, ips []string, iden string) {
+	nrOfParties := len(ips) * (peersPrComputer)
+	var paths = makePathStrings(len(ips), nrOfMults, iden)
+	var secrets = makeRandomSecretList(nrOfParties, 1049)
+	exp := makeRandomBalancedMultExpression(nrOfParties, nrOfMults)
+	confs := config.MakeDistributedConfigs(ips, peersPrComputer, nrOfParties, secrets, exp)
+	config.WriteConfig(paths, confs, peersPrComputer)
+}
+
+func makePathStrings(numberOfComputers int, variable int, variableIden string) (paths []string) {
 	for i := 0; i < numberOfComputers; i++ {
-		paths = append(paths, "com_"+strconv.Itoa(i+1)+"-"+strconv.Itoa(numberOfParties)+"-"+"peers.json")
+		paths = append(paths, "com_"+strconv.Itoa(i+1)+"-"+strconv.Itoa(variable)+"-"+variableIden+".json")
 	}
 	return
 }
