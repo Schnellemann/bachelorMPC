@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	makeDistributed()
+	runExperiments()
 }
 
 func runConfig() {
@@ -35,7 +35,7 @@ func runExperiments() {
 	//exp.IncrementMult(e)
 	//e = graph.MkPlotter("Increment Delay", "", "png", "Number of Peers")
 	//exp.IncDelay(e)
-	numberOfMults := 46000
+	numberOfMults := 2000
 	e = graph.MkExcel("Distributed-Mult-"+strconv.Itoa(numberOfMults), "Mults")
 	computerNr := 1
 
