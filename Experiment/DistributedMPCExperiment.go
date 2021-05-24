@@ -20,7 +20,7 @@ func MakeDistributedExperimentFile(peersPrComputer int, nrOfMults int, ips []str
 	nrOfParties := len(ips) * (peersPrComputer)
 	var paths = makePathStrings(len(ips), nrOfMults, iden)
 	var secrets = makeRandomSecretList(nrOfParties, 1049)
-	exp := makeRandomBalancedMultExpression(nrOfParties, nrOfMults)
+	exp := makeRandomMultExpression(nrOfParties, nrOfMults)
 	confs := config.MakeDistributedConfigs(ips, peersPrComputer, nrOfParties, secrets, exp)
 	config.WriteConfig(paths, confs, peersPrComputer)
 }
