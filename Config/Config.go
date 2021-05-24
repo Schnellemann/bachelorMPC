@@ -119,13 +119,13 @@ func MakeDistributedConfigs(listOfIps []string, peersPrComputer int, nrOfPeers i
 
 func makeIpPortStrings(ip string, nrOfPeers int) (listenIpPorts []string, connectIpPorts []string) {
 	for i := 0; i < nrOfPeers; i++ {
-		ListenPort := 40000 + i*10
+		ListenPort := 50000 + i*10
 		listenIpPorts = append(listenIpPorts, (ip + ":" + strconv.Itoa(ListenPort)))
 		var connectToIpPort string
 		if i == 0 {
 			connectToIpPort = ""
 		} else {
-			connectToIpPort = (ip + ":" + strconv.Itoa(40000+(i-1)*10))
+			connectToIpPort = (ip + ":" + strconv.Itoa(50000+(i-1)*10))
 		}
 		connectIpPorts = append(connectIpPorts, connectToIpPort)
 	}

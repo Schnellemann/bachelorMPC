@@ -8,10 +8,11 @@ import (
 	p "MPC/Party"
 	prot "MPC/Protocol"
 	"fmt"
+	"strconv"
 )
 
 func main() {
-	runExperiments()
+	makeDistributed()
 }
 
 func runConfig() {
@@ -26,28 +27,28 @@ func runConfig() {
 
 func runExperiments() {
 	var e graph.Interface
-	e = graph.MkExcel("Increment Peer", "Peers")
-	exp.IncrementPeer(e)
+	//e = graph.MkExcel("Increment Peer", "Peers")
+	//exp.IncrementPeer(e)
 	//e = graph.MkExcel("Increment-Mult+Delay", "Number of mults")
 	//exp.IncrementMultAndDelay(e)
 	//e = graph.MkExcel("Increment-Mult", "Delay (ms)")
 	//exp.IncrementMult(e)
 	//e = graph.MkPlotter("Increment Delay", "", "png", "Number of Peers")
 	//exp.IncDelay(e)
-	// numberOfParties := 27
-	// e = graph.MkExcel("Distributed-Mult-"+strconv.Itoa(numberOfParties), "Peers")
-	// computerNr := 1
+	numberOfParties := 18
+	e = graph.MkExcel("Distributed-Mult-"+strconv.Itoa(numberOfParties), "Peers")
+	computerNr := 2
 
-	// path := "com_" + strconv.Itoa(computerNr) + "-" + strconv.Itoa(numberOfParties) + "-peers.json"
-	// exp.RunDistributedExperiment(path, e, numberOfParties)
+	path := "com_" + strconv.Itoa(computerNr) + "-" + strconv.Itoa(numberOfParties) + "-peers.json"
+	exp.RunDistributedExperiment(path, e, numberOfParties)
 
 }
 
 func makeDistributed() {
 	var ips = []string{
-		"192.168.87.128",
-		"192.168.87.144",
 		"192.168.87.189",
+		"192.168.87.144",
+		"192.168.87.128",
 	}
-	exp.MakeDistributedExperimentFiles(3, 3, ips)
+	exp.MakeDistributedExperimentFiles(3, 100, ips)
 }

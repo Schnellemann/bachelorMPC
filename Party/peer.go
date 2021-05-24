@@ -310,6 +310,7 @@ func (p *Peer) checkReady() {
 	}
 	if ready {
 		//End of phase 1
+		fmt.Printf("Peer %v reported ready\n", p.config.VariableConfig.PartyNr)
 		p.hasSentReady = true
 		p.wg.Done()
 	}
