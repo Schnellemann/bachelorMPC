@@ -35,12 +35,12 @@ func runExperiments() {
 	//exp.IncrementMult(e)
 	//e = graph.MkPlotter("Increment Delay", "", "png", "Number of Peers")
 	//exp.IncDelay(e)
-	numberOfParties := 9
-	e = graph.MkExcel("Distributed-Mult-"+strconv.Itoa(numberOfParties), "Peers")
+	numberOfMults := 9
+	e = graph.MkExcel("Distributed-Mult-"+strconv.Itoa(numberOfMults), "Mults")
 	computerNr := 1
 
-	path := "com_" + strconv.Itoa(computerNr) + "-" + strconv.Itoa(numberOfParties) + "-peers.json"
-	exp.RunDistributedExperiment(path, e, numberOfParties)
+	path := "com_" + strconv.Itoa(computerNr) + "-" + strconv.Itoa(numberOfMults) + "-mults.json"
+	exp.RunDistributedExperiment(path, e, numberOfMults)
 
 }
 
