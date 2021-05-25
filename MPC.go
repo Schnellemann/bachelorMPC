@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	makeDistributed()
+	runExperiments()
 }
 
 func runConfig() {
@@ -50,5 +50,5 @@ func makeDistributed() {
 		"192.168.1.141",
 		"192.168.1.248",
 	}
-	exp.MakeDistributedIncMults(1000, 10000, 1000, ips)
+	exp.MakeDistributedIncMults(1000, 20000, 1000, ips)
 }
