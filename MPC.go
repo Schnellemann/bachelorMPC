@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	runExperiments()
+	makeDistributed()
 }
 
 func runConfig() {
@@ -35,7 +35,7 @@ func runExperiments() {
 	//exp.IncrementMult(e)
 	//e = graph.MkPlotter("Increment Delay", "", "png", "Number of Peers")
 	//exp.IncDelay(e)
-	numberOfMults := 2000
+	numberOfMults := 10000
 	e = graph.MkExcel("Distributed-Mult-"+strconv.Itoa(numberOfMults), "Mults")
 	computerNr := 1
 
@@ -46,9 +46,9 @@ func runExperiments() {
 
 func makeDistributed() {
 	var ips = []string{
-		"192.168.87.189",
-		"192.168.87.144",
-		"192.168.87.128",
+		"192.168.1.193",
+		"192.168.1.141",
+		"192.168.1.248",
 	}
-	exp.MakeDistributedIncMults(2000, 50000, 2000, ips)
+	exp.MakeDistributedIncMults(1000, 10000, 1000, ips)
 }
