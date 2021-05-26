@@ -8,7 +8,6 @@ import (
 	p "MPC/Party"
 	prot "MPC/Protocol"
 	"fmt"
-	"strconv"
 )
 
 func main() {
@@ -27,20 +26,22 @@ func runConfig() {
 
 func runExperiments() {
 	var e graph.Interface
+	e = graph.MkExcel("Increment-Mult+Bandwidth3", "Number of mults")
+	exp.IncrementMultAndBandwidth(e)
 	//e = graph.MkExcel("Increment Peer", "Peers")
 	//exp.IncrementPeer(e)
-	//e = graph.MkExcel("Increment-Mult+Delay", "Number of mults")
+	//e = graph.MkExcel("Increment-Mult+Delay3", "Number of mults")
 	//exp.IncrementMultAndDelay(e)
 	//e = graph.MkExcel("Increment-Mult", "Delay (ms)")
 	//exp.IncrementMult(e)
 	//e = graph.MkPlotter("Increment Delay", "", "png", "Number of Peers")
 	//exp.IncDelay(e)
-	numberOfMults := 10000
-	e = graph.MkExcel("Distributed-Mult-"+strconv.Itoa(numberOfMults), "Mults")
-	computerNr := 1
+	// numberOfMults := 10000
+	// e = graph.MkExcel("Distributed-Mult-"+strconv.Itoa(numberOfMults), "Mults")
+	// computerNr := 1
 
-	path := "com_" + strconv.Itoa(computerNr) + "-" + strconv.Itoa(numberOfMults) + "-mults.json"
-	exp.RunDistributedExperiment(path, e, numberOfMults)
+	// path := "com_" + strconv.Itoa(computerNr) + "-" + strconv.Itoa(numberOfMults) + "-mults.json"
+	// exp.RunDistributedExperiment(path, e, numberOfMults)
 
 }
 
