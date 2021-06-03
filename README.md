@@ -16,16 +16,22 @@ Input the ip adresses of the perticipating computers in the ips variable in make
     var ips = []string{"First ip", "Second ip", "third ip"}
 ```
 
-Run the command 
+Run the command to create config files for all the participants.
 
 ```
     go run MPC.go files
 ```
 
-Now set the variable computer nr and amount of multiplications.
+Set the variable computer nr and amount of multiplications.
 
 ```
     numberOfMults := 1000
     computerNr := 1 //If your Ip was index 0 in ips
 ```
 
+Run the command 
+```
+    go run MPC.go
+```
+## Disclaimer
+This project is not active after June 18. 2021 and will not be maintained in any way. It was only for educational purpose and should not be used in any other way. 
