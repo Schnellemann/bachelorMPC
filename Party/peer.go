@@ -237,7 +237,6 @@ func (p *Peer) addEntryDecoderMap(decoder *gob.Decoder, conTuble *ConnectionTupl
 }
 
 func (p *Peer) connectToPeers() {
-	//fmt.Printf("Peerlist at connect to Peers %v\n", p.peerlist.ipPorts)
 	for _, ip := range p.peerlist.ipPorts {
 		//Make sure you don't connect to the initial peer again
 		if ip != p.config.VariableConfig.ConnectIpPort && ip != p.config.VariableConfig.ListenIpPort {
@@ -260,8 +259,6 @@ func (p *Peer) listenForConnections(listenOnAddress string) {
 		return
 	}
 	defer li.Close()
-	//fmt.Println("Other peers can connect to me on the following ip:port")
-	//fmt.Println("Address " + ": " + p.config.VariableConfig.ListenIpPort)
 	if p.config.VariableConfig.PartyNr == p.config.ConstantConfig.NumberOfParties {
 		return
 	}

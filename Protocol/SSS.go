@@ -20,7 +20,6 @@ func makeShamirSecretSharing(secret int64, fieldImp fields.Field, degree int) *S
 	for i := 1; i <= degree; i++ {
 		SSS.poly[i] = SSS.field.GetRandom()
 	}
-	//fmt.Printf("Poly: %v\n", SSS.poly)
 	return SSS
 }
 
