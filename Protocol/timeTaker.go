@@ -88,6 +88,3 @@ func (tM *TimeMeasuring) Run() int64 {
 	//log.Printf("Running the full protocol for party %v took %v.\n", tM.config.VariableConfig.PartyNr, endTime.Sub(startTime))
 	return res
 }
-func (tM *TimeMeasuring) Destroy() {
-	tM.prot.Destroy()
-}

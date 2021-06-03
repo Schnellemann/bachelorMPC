@@ -5,6 +5,9 @@ import (
 	"sync"
 )
 
+/*
+	Network interface to use in a secret sharings scheme
+*/
 type IPeer interface {
 	SendShares([]netpack.Share)
 	SendShare(netpack.Share, int)

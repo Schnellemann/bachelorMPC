@@ -1,6 +1,0 @@
-
-Adversary implementation
-- Should we? if yes then
-    - Work on the www?
-    - 
-    - Collector vs. each peer as adversary

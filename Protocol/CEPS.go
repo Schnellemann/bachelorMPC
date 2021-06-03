@@ -98,7 +98,6 @@ func (prot *Ceps) setupTree() {
 	astExp := parsing.ParseExpression(exp)
 	instructionTree, err := parsing.ConvertAstToTree(astExp)
 	if err != nil {
-		//TODO maybe shut down peer?
 		println(err.Error())
 		return
 	}
@@ -111,10 +110,6 @@ func (prot *Ceps) Run() int64 {
 	prot.runPreprocess()
 	res := prot.calculate()
 	return res
-}
-
-func (prot *Ceps) Destroy() {
-	//TODO
 }
 
 func (prot *Ceps) calculateInstruction(instructionTree *parsing.InstructionTree) {

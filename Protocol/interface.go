@@ -6,5 +6,4 @@ type Prot interface {
 	setupTree()
 	runPreprocess()
 	Run() int64
-	Destroy()
 }
