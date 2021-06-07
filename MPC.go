@@ -34,18 +34,22 @@ func runConfig() {
 
 func runExperiments() {
 	var e graph.Interface
-
 	/*
 		Increasing peer
 	*/
 	e = graph.MkExcel("Increment Peer", "Peers")
 	exp.IncrementPeer(e)
-
 	/*
 		Increasing amount of multiplications and peer delay
 	*/
 	//e = graph.MkExcel("Increment-Mult+Delay", "Number of mults")
 	//exp.IncrementMultAndDelay(e)
+
+	/*
+		Increment mult and bandwidth size
+	*/
+	//e = graph.MkExcel("Increment-Mult+Bandwidth", "Number of mults")
+	//exp.IncrementMultAndBandwidth(e)
 
 	/*
 		Increasing amount of multiplications
@@ -54,17 +58,18 @@ func runExperiments() {
 	//exp.IncrementMult(e)
 
 	/*
-		Increasing peer delay
+		Increasing message delay
 	*/
 	//e = graph.MkPlotter("Increment Delay", "", "png", "Number of Peers")
 	//exp.IncDelay(e)
 
 	/*
-		Distributed experiment increment Peers
+		Distributed experiment given a path to a config.json file
 	*/
-	// numberOfMults := 1000
-	// computerNr := 1
+	// numberOfMults := 10000
 	// e = graph.MkExcel("Distributed-Mult-"+strconv.Itoa(numberOfMults), "Mults")
+	// computerNr := 1
+
 	// path := "com_" + strconv.Itoa(computerNr) + "-" + strconv.Itoa(numberOfMults) + "-mults.json"
 	// exp.RunDistributedExperiment(path, e, numberOfMults)
 
