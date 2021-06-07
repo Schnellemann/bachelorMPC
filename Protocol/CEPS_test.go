@@ -4,7 +4,6 @@ import (
 	config "MPC/Config"
 	field "MPC/Fields"
 	party "MPC/Party"
-	"fmt"
 	"testing"
 	"time"
 )
@@ -223,7 +222,6 @@ func TestLargeBalanced(t *testing.T) {
 		go goProt(prot, channel)
 		time.Sleep(100 * time.Millisecond)
 	}
-	fmt.Println("Done Setting up the protocols")
 	for i, c := range channels {
 		result := <-c
 		if result != 189 {

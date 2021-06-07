@@ -11,8 +11,6 @@ import (
 	"time"
 )
 
-var filepath string = "peerTestConfig.json"
-
 func assertEqualError(received interface{}, expected interface{}) string {
 	return fmt.Sprintf("Received %v (type %v), expected %v (type %v)", received, reflect.TypeOf(received), expected, reflect.TypeOf(expected))
 }
@@ -116,82 +114,6 @@ func TestManyConnections(t *testing.T) {
 	}
 }
 
-func TestSendShares(t *testing.T) {
-	configs := config.ReadConfig(filepath)
-	conf := configs[0]
-	conf2 := configs[1]
-	conf3 := configs[2]
-	conf4 := configs[3]
-	conf5 := configs[4]
-	p := MkPeer(conf)
-	p2 := MkPeer(conf2)
-	p3 := MkPeer(conf3)
-	p4 := MkPeer(conf4)
-	p5 := MkPeer(conf5)
-	/*
-		Make channels for message
-	*/
-	pChan1 := make(chan netpackage.Share)
-	pChan2 := make(chan netpackage.Share)
-	pChan3 := make(chan netpackage.Share)
-	pChan4 := make(chan netpackage.Share)
-	pChan5 := make(chan netpackage.Share)
-
-	/*
-		Connect them
-	*/
-	var wg sync.WaitGroup
-	wg.Add(5)
-	fmt.Println("Started peer 1")
-	p.StartPeer(pChan1, &wg)
-	time.Sleep(100 * time.Millisecond)
-	fmt.Println("Started peer 2")
-	p2.StartPeer(pChan2, &wg)
-	time.Sleep(100 * time.Millisecond)
-	fmt.Println("Started peer 3")
-	p3.StartPeer(pChan3, &wg)
-	time.Sleep(100 * time.Millisecond)
-	fmt.Println("Started peer 4")
-	p4.StartPeer(pChan4, &wg)
-	time.Sleep(100 * time.Millisecond)
-	fmt.Println("Started peer 5")
-	p5.StartPeer(pChan5, &wg)
-	time.Sleep(100 * time.Millisecond)
-	fmt.Println("Still waiting")
-	wg.Wait()
-	fmt.Println("Done waiting")
-	shares := []netpackage.Share{
-		{Value: 1, Identifier: netpackage.ShareIdentifier{Ins: "share1", PartyNr: 1}},
-		{Value: 2, Identifier: netpackage.ShareIdentifier{Ins: "share2", PartyNr: 1}},
-		{Value: 3, Identifier: netpackage.ShareIdentifier{Ins: "share3", PartyNr: 1}},
-		{Value: 4, Identifier: netpackage.ShareIdentifier{Ins: "share4", PartyNr: 1}},
-		{Value: 5, Identifier: netpackage.ShareIdentifier{Ins: "share5", PartyNr: 1}},
-	}
-
-	go p.SendShares(shares)
-	share1Res := <-pChan1
-	share2Res := <-pChan2
-	share3Res := <-pChan3
-	share4Res := <-pChan4
-	share5Res := <-pChan5
-
-	if share1Res.Value != 1 && share1Res.Identifier.Ins != "share1" {
-		t.Errorf("Wrong share recieved at peer2, should have value: %v, got: %v", 1, share2Res.Value)
-	}
-	if share2Res.Value != 2 && share2Res.Identifier.Ins != "share2" {
-		t.Errorf("Wrong share recieved at peer2, should have value: %v, got: %v", 2, share2Res.Value)
-	}
-	if share3Res.Value != 3 && share3Res.Identifier.Ins != "share3" {
-		t.Errorf("Wrong share recieved at peer3, should have value: %v, got: %v", 3, share3Res.Value)
-	}
-	if share3Res.Value != 4 && share4Res.Identifier.Ins != "share4" {
-		t.Errorf("Wrong share recieved at peer3, should have value: %v, got: %v", 4, share4Res.Value)
-	}
-	if share3Res.Value != 5 && share5Res.Identifier.Ins != "share5" {
-		t.Errorf("Wrong share recieved at peer3, should have value: %v, got: %v", 5, share5Res.Value)
-	}
-}
-
 func contains(s []string, e string) bool {
 	for _, p := range s {
 		if p == e {
@@ -227,7 +149,7 @@ func TestPeerlists(t *testing.T) {
 	p3.StartPeer(pChan3, &wg)
 	wg.Wait()
 	peers := []*Peer{p, p2, p3}
-	shouldHold := []string{"127.0.1.1:40000", "127.0.1.1:40010", "127.0.1.1:40020"}
+	shouldHold := []string{"127.0.1.1:50000", "127.0.1.1:50010", "127.0.1.1:50020"}
 
 	for i := 0; i < 3; i++ {
 		for _, j := range shouldHold {
