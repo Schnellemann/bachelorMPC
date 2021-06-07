@@ -129,7 +129,6 @@ func (prot *Ceps) calculateInstruction(instructionTree *parsing.InstructionTree)
 	default:
 		fmt.Printf("Unknown instruction %v", ins)
 	}
-	// return
 }
 
 func (prot *Ceps) receive() {
@@ -271,7 +270,6 @@ func (prot *Ceps) scalar(ins *parsing.ScalarInstruction) {
 
 func (prot *Ceps) outputReconstruction(finalResult string) int64 {
 	resIden := prot.createWaitShareIdentifier(finalResult)
-	//Send out result share
 	prot.rShares.mu.Lock()
 	resultShare := prot.rShares.receivedShares[resIden]
 	prot.rShares.mu.Unlock()
@@ -290,8 +288,6 @@ func (prot *Ceps) outputReconstruction(finalResult string) int64 {
 }
 
 func (prot *Ceps) waitForFinalShares() []netpack.Share {
-	//Could be made with observer pattern, register an observer when this is called, an observer
-	//could just be a chan int, each time you get a new package you do notify which sends a signal on all (multiple) channels for each wait method
 	for {
 		prot.fShares.mu.Lock()
 		if len(prot.fShares.finalShares) > prot.degree {

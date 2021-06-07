@@ -62,7 +62,6 @@ func (p *Peer) StartPeer(shareChannel chan netpack.Share, wg *sync.WaitGroup) {
 	p.peerlist.ipPorts = append(p.peerlist.ipPorts, p.config.VariableConfig.ListenIpPort)
 	p.peerlist.lock.Unlock()
 
-	//Test on localhost
 	if p.config.VariableConfig.ConnectIpPort == "" {
 		p.peerlist.hasReceived.Done()
 	} else {
@@ -70,8 +69,6 @@ func (p *Peer) StartPeer(shareChannel chan netpack.Share, wg *sync.WaitGroup) {
 		if err != nil {
 			fmt.Printf("Port %v could not connect peer on port %v \n", p.config.VariableConfig.ListenIpPort, p.config.VariableConfig.ConnectIpPort)
 		} else if conn != nil {
-			//defer conn.Close()
-			//Make the decoder such that we can decode the messages
 			dec := gob.NewDecoder(conn)
 			enc := gob.NewEncoder(conn)
 			//add first connection to map
@@ -92,7 +89,6 @@ func (p *Peer) StartPeer(shareChannel chan netpack.Share, wg *sync.WaitGroup) {
 
 }
 
-//Send Methods
 func (p *Peer) SendShares(shareList []netpack.Share) {
 	p.connections.lock.Lock()
 	connections := len(p.connections.c)
@@ -164,7 +160,6 @@ func (p *Peer) SendFinal(share netpack.Share) {
 	p.connections.lock.Unlock()
 }
 
-// Recieve Methods
 func (p *Peer) receivePeers(dec *gob.Decoder) {
 	recievedPeersPackage := netpack.NetPackage{}
 	err := dec.Decode(&recievedPeersPackage)
@@ -191,12 +186,10 @@ func (p *Peer) addConnection(newConnection net.Conn, ip string) {
 	p.connections.c = append(p.connections.c, conTuble)
 	p.connections.lock.Unlock()
 	p.checkReady()
-	//send peers to the new connections
 	go p.sendPeerlist(encoder)
 	go p.handleConnection(decoder)
 }
 
-// Internal functions
 func (p *Peer) handleConnection(dec *gob.Decoder) {
 	//A new peer has connected to us
 	//Start receiving packages
@@ -212,10 +205,7 @@ func (p *Peer) handleConnection(dec *gob.Decoder) {
 				return
 			}
 		} else {
-			//If we receive IpPorts we should ignore it, we handle this
-			//Only if we're actually waiting for the peerlist
 			if receivedPackage.Peer != "" {
-				//This is a peer broadcast, so add the peer to the peer list and connect the encoder to the p.number.
 				p.peerlist.lock.Lock()
 				p.peerlist.ipPorts = append(p.peerlist.ipPorts, receivedPackage.Peer)
 				p.peerlist.lock.Unlock()
@@ -223,8 +213,6 @@ func (p *Peer) handleConnection(dec *gob.Decoder) {
 				p.checkReady()
 
 			} else if receivedPackage.IpPorts == nil {
-				//If we receive IpPorts we should ignore it, we handle this
-				//Only if we're actually waiting for the peerlist
 				s := receivedPackage.Share
 				p.cShare <- s
 			}
@@ -307,7 +295,6 @@ func (p *Peer) checkReady() {
 	}
 	if ready {
 		//End of phase 1
-		//fmt.Printf("Peer %v reported ready\n", p.config.VariableConfig.PartyNr)
 		p.hasSentReady = true
 		p.wg.Done()
 	}

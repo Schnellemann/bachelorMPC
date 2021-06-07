@@ -65,7 +65,6 @@ func (bp *BandwidthPeer) propagateMessage() {
 }
 
 func (bp *BandwidthPeer) marshalBinary(pack *netpack.NetPackage) ([]byte, error) {
-	//use default gob encoder
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	if err := enc.Encode(pack); err != nil {
