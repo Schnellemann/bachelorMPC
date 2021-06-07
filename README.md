@@ -2,7 +2,11 @@
 This is a bachelor project by Kaare Ø. Kristensen, Mads Hejlesen and Jens S. Nellemann.
 ## Requires 
 
-Go installed
+Go 1.15
+
+To run experiments the following two modules are used:
+github.com/360EntSecGroup-Skylar/excelize/v2 v2.4.0
+gonum.org/v1/plot v0.9.0
 
 ## Running
 
